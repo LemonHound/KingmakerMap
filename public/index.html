@@ -30,14 +30,20 @@
     </header>
 
     <main>
-        <div id="map-container" class="hidden">
-            <!-- Map will be rendered here -->
-            <h2>Kingdom Map</h2>
-            <div id="map-controls">
-                <button id="zoom-in">+</button>
-                <button id="zoom-out">-</button>
+        <!-- Updated HTML structure for map section -->
+        <div id="map-section">
+            <div id="map-header">
+                <h2>Kingdom Map</h2>
+                <div id="map-controls">
+                    <button id="zoom-in">+</button>
+                    <button id="zoom-out">-</button>
+                    <!-- DM controls can be added here if needed -->
+                </div>
             </div>
-            <div id="hex-map"></div>
+
+            <div id="map-container">
+                <div id="hex-map"></div>
+            </div>
         </div>
 
         <div id="hex-details" class="hidden">
@@ -46,10 +52,6 @@
             <div id="hex-info"></div>
         </div>
     </main>
-
-    <footer>
-        <p>Pathfinder Kingmaker Campaign Tracker - Created for our group</p>
-    </footer>
 </div>
 
 <!-- JavaScript files -->

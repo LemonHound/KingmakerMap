@@ -5,7 +5,7 @@ const { initializeDatabase } = require('./database/db');
 
 // Import routes
 const authRoutes = require('./routes/auth');
-// const mapRoutes = require('./routes/map');
+const mapRoutes = require('./routes/map');
 
 // Initialize express app
 const app = express();
@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/map', mapRoutes);
+app.use('/api/map', mapRoutes);
 
 // Default route serves index.html
 app.get('/', (req, res) => {
