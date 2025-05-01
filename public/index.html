@@ -9,54 +9,59 @@
 <body>
 <div class="container">
     <header>
-        <h1>Pathfinder Kingmaker Campaign</h1>
-        <div id="auth-section">
-            <!-- Login/Register forms will appear here -->
-            <div id="login-form">
-                <h2>Login</h2>
-                <form id="login">
-                    <div class="form-group">
-                        <label for="username">Username:</label>
-                        <input type="text" id="username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" required>
-                    </div>
-                    <button type="submit">Login</button>
-                </form>
+        <div class="header-content">
+            <div class="header-left">
+                <h1>Pathfinder Kingmaker Campaign</h1>
+            </div>
+            <div class="header-right">
+                <div id="user-info" class="hidden">
+                    <span id="username-display"></span>
+                    <button id="logout-btn">Logout</button>
+                </div>
+                <div id="map-controls" class="hidden">
+                    <!-- Admin controls are added here for valid users -->
+                </div>
             </div>
         </div>
     </header>
 
-    <main>
-        <!-- Updated HTML structure for map section -->
-        <div id="map-section">
-            <div id="map-header">
-                <h2>Kingdom Map</h2>
-                <div id="map-controls">
-                    <button id="zoom-in">+</button>
-                    <button id="zoom-out">-</button>
-                    <!-- DM controls can be added here if needed -->
+    <div id="auth-section">
+        <!-- Login/Register forms will appear here -->
+        <div id="login-form">
+            <h2>Login</h2>
+            <form id="login">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
 
-            <div id="map-container">
+    <main>
+        <div id="game-container">
+            <div id="map-container" class="hidden">
                 <div id="hex-map"></div>
             </div>
-        </div>
-
-        <div id="hex-details" class="hidden">
-            <!-- Details about selected hex will appear here -->
-            <h3>Hex Details</h3>
-            <div id="hex-info"></div>
+            <div id="hex-details" class="hidden">
+                <div class="details-header">
+                    <h3>Hex Details</h3>
+                    <button id="close-hex-details" class="close-button">×</button>
+                </div>
+                <div id="hex-info"></div>
+            </div>
         </div>
     </main>
 </div>
 
 <!-- JavaScript files -->
-<script src="js/main.js"></script>
 <script src="js/auth.js"></script>
-<script src="js/map.js"></script>
+<script type="module" src="/js/map.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

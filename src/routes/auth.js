@@ -88,7 +88,7 @@ router.post('/login', (req, res) => {
 
         // Find user by username
         db.get(
-            'SELECT id, username, password, is_dm FROM users WHERE username = ?',
+            'SELECT username, password, is_dm FROM users WHERE username = ?',
             [username],
             async (err, user) => {
                 if (err) {
@@ -110,7 +110,6 @@ router.post('/login', (req, res) => {
                 // Generate JWT token
                 const token = jwt.sign(
                     {
-                        userId: user.id,
                         username: user.username,
                         isDM: user.is_dm === 1
                     },

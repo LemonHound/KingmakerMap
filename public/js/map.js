@@ -1,3 +1,5 @@
+import apiUtils from './utils/apiUtils.js';
+
 // Hex map related functions
 let hexMap = [];
 let currentScale = 1;
@@ -17,7 +19,7 @@ const MAP_IMAGE_PATH = '../img/TheStolenLands.jpg';
 let mapConfig = {
     offsetX: -72,          // Horizontal offset of hexes relative to map
     offsetY: -60,          // Vertical offset of hexes relative to map
-    hexScale: 1.0,       // Scale factor for hex grid (independent of zoom)
+    hexScale: 1.0,       // Scale factor for hex grid (leave this as 1 - some weird bug when this is changed.  use the image scales instead.)
     imageScaleVertical: 0.265,     // Scale factor for vertical image dimension
     imageScaleHorizontal: 0.264,      // Scale factor for horizontal image dimension
     imageScale: 0.265,          // Scale if X or Y factor not found, or not in use for older functions
@@ -30,11 +32,23 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeMap();
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up wheel event for zooming
+    document.getElementById('map-container').addEventListener('wheel', handleWheel);
+});
+
 // Initialize the hex map
 function initializeMap() {
     console.log('Initializing hex map');
     const mapContainer = document.getElementById('map-container');
     const hexMapContainer = document.getElementById('hex-map');
+
+    // Check if elements exist
+    if (!mapContainer || !hexMapContainer) {
+        console.error('Map container or hex map container not found');
+        return; // Exit if elements don't exist yet
+    }
+
     hexMapContainer.innerHTML = '';
 
     // Get container dimensions explicitly from map-container
@@ -52,18 +66,6 @@ function initializeMap() {
 
     // Generate the hex grid
     GenerateMap(svgElement);
-
-    // Set up zoom controls
-    document.getElementById('zoom-in').addEventListener('click', () => {
-        currentScale += 0.1;
-        updateMapTransform(true); // true flag for centering when zooming
-    });
-    document.getElementById('zoom-out').addEventListener('click', () => {
-        if (currentScale > 0.5) {
-            currentScale -= 0.1;
-            updateMapTransform(true); // true flag for centering when zooming
-        }
-    });
 
     // Set up drag functionality
     setupDragControls(svgElement);
@@ -208,7 +210,6 @@ function setupDragControls(svgElement) {
         if (e.target.tagName.toLowerCase() === 'polygon') {
             // Mark this as a potential hex click
             isHexClick = true;
-            // We don't prevent default here so the event can be used for drag if needed
         } else {
             // If not clicking on a hex, start dragging immediately
             isHexClick = false;
@@ -263,11 +264,24 @@ function setupDragControls(svgElement) {
     }
 
     // Mouse up event - stop dragging
-    document.addEventListener('mouseup', () => {
+    document.addEventListener('mouseup', (e) => {
         if (isDragging) {
             isDragging = false;
             svgElement.style.cursor = 'grab';
             svgElement.classList.remove('grabbing');
+
+            // If this was a small movement, it might be a click on a hex
+            const movedX = Math.abs(e.clientX - startX);
+            const movedY = Math.abs(e.clientY - startY);
+
+            if (movedX < 3 && movedY < 3 && isHexClick && e.target.tagName.toLowerCase() === 'polygon') {
+                // Process as a hex click
+                const x = parseInt(e.target.getAttribute('data-x'));
+                const y = parseInt(e.target.getAttribute('data-y'));
+                if (!isNaN(x) && !isNaN(y)) {
+                    showHexDetails(x, y);
+                }
+            }
         }
         isHexClick = false;
     });
@@ -333,7 +347,8 @@ function createHex(hexGroup, row, col) {
         isExplored: false,
         controlledBy: null,
         resources: null,
-        notes: null
+        notes: null,
+        isVisible: true
     };
 }
 
@@ -453,6 +468,10 @@ function showHexDetails(x, y) {
     // Show the hex details section
     const hexDetailsElement = document.getElementById('hex-details');
     hexDetailsElement.classList.remove('hidden');
+    hexDetailsElement.classList.add('visible');
+
+    // Resize map container
+    document.getElementById('map-container').classList.add('with-details');
 
     // Check if user is DM
     const isDM = localStorage.getItem('isDM') === 'true';
@@ -465,13 +484,31 @@ function showHexDetails(x, y) {
         ${hex.controlledBy ? `<p><strong>Controlled By:</strong> ${hex.controlledBy}</p>` : ''}
         ${hex.resources ? `<p><strong>Resources:</strong> ${hex.resources}</p>` : ''}
         ${hex.notes ? `<p><strong>Notes:</strong> ${hex.notes}</p>` : ''}
-        <div class="hex-actions">
+        <div class=${isDM ? 'hex-actions' : 'hidden'}>
             <button id="mark-explored">${hex.isExplored ? 'Mark as Unexplored' : 'Mark as Explored'}</button>
+            <button id="change-visibility">${hex.isVisible ? 'Hide This Hex' : 'Show This Hex'}</button>
+            <button id="restore-surrounding-hexes">Restore Surrounding Hexes</button>
+        </div>
+        <div class="hex-actions">
             <button id="add-note">Add Note</button>
+            <button id="test-query">Test Query</button>
+        </div>
+        <div class="hex-notes">
+            <h1>Notes:</h1>
+            Notes go here
         </div>
     `;
 
     // Add event listeners to buttons
+    document.getElementById('test-query').addEventListener('click', async () => {
+        try {
+            const result = await apiUtils.test.test("potato");
+            alert(`Query result: ${result.data}`);
+        } catch (error) {
+            alert('Test failed: ' + error.message);
+        }
+    });
+
     document.getElementById('mark-explored').addEventListener('click', () => {
         markHexAsExplored(x, y, !hex.isExplored);
     });
@@ -482,6 +519,30 @@ function showHexDetails(x, y) {
             addNoteToHex(x, y, note);
         }
     });
+
+    document.getElementById('close-hex-details').addEventListener('click', () => {
+        closeHexDetails();
+    });
+
+    document.getElementById('change-visibility').addEventListener('click', () => {
+        invertVisibility(x, y);
+    });
+
+    document.getElementById('restore-surrounding-hexes').addEventListener('click', () => {
+        restoreSurroundingHexes(x, y);
+    });
+}
+
+function closeHexDetails() {
+    const hexDetailsElement = document.getElementById('hex-details');
+    hexDetailsElement.classList.remove('visible');
+    hexDetailsElement.classList.add('hidden');
+
+    // Restore map container to full width
+    document.getElementById('map-container').classList.remove('with-details');
+
+    // Clear selection
+    clearHexSelection();
 }
 
 function createHighlightGroup(svgElement) {
@@ -521,6 +582,46 @@ function markHexAsExplored(x, y, explored = true) {
     }
 }
 
+function invertVisibility(x, y){
+    if(hexMap[y] && hexMap[y][x]) {
+        hexMap[y][x].isVisible = !hexMap[y][x].isVisible;
+    }
+    const hex = hexMap[y][x];
+    if(hex.isVisible !== false){
+        hex.element.style.display = '';
+        hex.element.style.opacity = '1';
+        showHexDetails(x, y);
+    } else {
+        hex.element.style.display = 'none';
+        closeHexDetails();
+    }
+}
+
+function restoreSurroundingHexes(x, y){
+
+    let skew = y % 2 === 1 ? -1 : 0;
+
+    // hexes above
+    setVisible(x + skew, y - 1);
+    setVisible(x + skew + 1, y - 1);
+
+    // hexes left and right
+    setVisible(x - 1, y);
+    setVisible(x + 1, y);
+
+    // hexes below
+    setVisible(x + skew, y + 1);
+    setVisible(x + skew + 1, y + 1);
+
+    function setVisible(x, y){
+        if(hexMap[y] && hexMap[y][x]) {
+            hexMap[y][x].isVisible = true;
+            hexMap[y][x].element.style.display = '';
+            hexMap[y][x].element.style.opacity = '1';
+        }
+    }
+}
+
 // Add a note to a hex
 function addNoteToHex(x, y, note) {
     console.log(`Adding note to hex ${x},${y}:`);
@@ -536,6 +637,25 @@ function addNoteToHex(x, y, note) {
     }
 }
 
+function handleWheel(e) {
+    e.preventDefault();
+
+    // Determine zoom direction
+    if (e.deltaY < 0) {
+        // Zoom in
+        if (currentScale < 2.4) {
+            currentScale += 0.2;
+            updateMapTransform(true);
+        }
+    } else {
+        // Zoom out
+        if (currentScale > 0.6) {
+            currentScale -= 0.2;
+            updateMapTransform(true);
+        }
+    }
+}
+
 window.addEventListener('resize', function() {
     const mapContainer = document.getElementById('map-container');
     mapContainerWidth = mapContainer.clientWidth;
@@ -544,3 +664,9 @@ window.addEventListener('resize', function() {
     // Re-apply transform with new bounds
     updateMapTransform();
 });
+
+
+
+
+// Export global functions
+window.initializeMap = initializeMap;

@@ -58,8 +58,8 @@ async function handleLogin(event) {
         localStorage.setItem('username', data.user.username);
         localStorage.setItem('isDM', data.user.isDM);
 
-        // Show the map interface
-        showMap();
+        // Redirect to main interface
+        window.location.reload(); // This will reload the page and the main.js will handle showing the map
     } catch (error) {
         console.error('Login error:', error);
         alert(error.message || 'Login failed. Please check your credentials.');
@@ -70,6 +70,7 @@ async function handleLogin(event) {
 function showRegistrationForm() {
     const authSection = document.getElementById('auth-section');
     const loginForm = document.getElementById('login-form');
+    const mapControls = document.getElementById('map-controls');
 
     // Create registration form if it doesn't exist
     if (!document.getElementById('register-form')) {
@@ -110,11 +111,13 @@ function showRegistrationForm() {
             e.preventDefault();
             loginForm.style.display = 'block';
             document.getElementById('register-form').style.display = 'none';
+            document.getElementById('map-controls').style.display = 'none';
         });
     }
 
     // Hide login, show registration
     loginForm.style.display = 'none';
+    mapControls.style.display = 'none';
     document.getElementById('register-form').style.display = 'block';
 }
 
