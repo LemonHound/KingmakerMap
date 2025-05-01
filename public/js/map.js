@@ -8,6 +8,8 @@ const HEX_SIZE = 90; // Size of hexagons in pixels
 let isDragging = false;
 let startX, startY;
 let translateX = 0, translateY = 0;
+let mapContainerWidth = 0, mapContainerHeight = 0;
+let mapWidth = 0, mapHeight = 0;
 
 // Map image
 let mapBackgroundImage = null;
@@ -19,8 +21,8 @@ let mapConfig = {
     imageScaleVertical: 0.265,     // Scale factor for vertical image dimension
     imageScaleHorizontal: 0.264,      // Scale factor for horizontal image dimension
     imageScale: 0.265,          // Scale if X or Y factor not found, or not in use for older functions
-    rows: 20,            // Number of rows in hex grid
-    cols: 40             // Number of columns in hex grid
+    rows: 13,            // Number of rows in hex grid
+    cols: 29             // Number of columns in hex grid
 };
 
 // Initialize the hex map when the page loads
@@ -31,13 +33,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize the hex map
 function initializeMap() {
     console.log('Initializing hex map');
-    const mapContainer = document.getElementById('hex-map');
-    mapContainer.innerHTML = '';
+    const mapContainer = document.getElementById('map-container');
+    const hexMapContainer = document.getElementById('hex-map');
+    hexMapContainer.innerHTML = '';
+
+    // Get container dimensions explicitly from map-container
+    mapContainerWidth = mapContainer.clientWidth;
+    mapContainerHeight = mapContainer.clientHeight;
+    console.log(`Map container dimensions: ${mapContainerWidth}x${mapContainerHeight}`);
 
     // Create SVG element
     const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svgElement.id = "hex-svg-map";
-    mapContainer.appendChild(svgElement);
+    hexMapContainer.appendChild(svgElement);
 
     // Add background image first (so it's behind hexes)
     addMapBackground(svgElement);
@@ -48,17 +56,59 @@ function initializeMap() {
     // Set up zoom controls
     document.getElementById('zoom-in').addEventListener('click', () => {
         currentScale += 0.1;
-        updateMapTransform();
+        updateMapTransform(true); // true flag for centering when zooming
     });
     document.getElementById('zoom-out').addEventListener('click', () => {
         if (currentScale > 0.5) {
             currentScale -= 0.1;
-            updateMapTransform();
+            updateMapTransform(true); // true flag for centering when zooming
         }
     });
 
     // Set up drag functionality
     setupDragControls(svgElement);
+
+    // Initialize map position
+    translateX = 0;
+    translateY = 0;
+    updateMapDimensions();
+}
+
+function updateMapDimensions() {
+    const svgElement = document.getElementById('hex-svg-map');
+    if (svgElement) {
+        // Get the actual dimensions from the SVG attributes
+        mapWidth = parseFloat(svgElement.getAttribute('width')) || 0;
+        mapHeight = parseFloat(svgElement.getAttribute('height')) || 0;
+        console.log(`Map dimensions: ${mapWidth}x${mapHeight}`);
+
+        // Center the map initially
+        centerMap();
+    }
+}
+
+function centerMap() {
+    const scaledMapWidth = mapWidth * currentScale;
+    const scaledMapHeight = mapHeight * currentScale;
+
+    // Calculate centering position
+    if (scaledMapWidth < mapContainerWidth) {
+        translateX = (mapContainerWidth - scaledMapWidth) / 2;
+    } else {
+        translateX = 0; // Default to left aligned if larger than container
+    }
+
+    if (scaledMapHeight < mapContainerHeight) {
+        translateY = (mapContainerHeight - scaledMapHeight) / 2;
+    } else {
+        translateY = 0; // Default to top aligned if larger than container
+    }
+
+    // Apply transform without bounds checking
+    const svgElement = document.getElementById('hex-svg-map');
+    if (svgElement) {
+        svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    }
 }
 
 function addMapBackground(svgElement) {
@@ -86,7 +136,7 @@ function addMapBackground(svgElement) {
         const imageHeight = this.height;
 
         // Calculate map dimensions based on hex grid size
-        const mapWidth = mapConfig.cols * HEX_SIZE * 1.5;
+        const mapWidth = mapConfig.cols * HEX_SIZE * Math.cos(Math.PI / 180 * 30) + 1.5 * HEX_SIZE + mapConfig.offsetX;
         const mapHeight = mapConfig.rows * HEX_SIZE * 0.75 + HEX_SIZE;
 
         // Set SVG dimensions
@@ -99,6 +149,9 @@ function addMapBackground(svgElement) {
 
         // Position and scale the image
         updateMapImageTransform();
+
+        // Update map dimensions after loading
+        updateMapDimensions();
     };
     img.src = MAP_IMAGE_PATH;
 }
@@ -300,12 +353,66 @@ function calculateHexPoints(centerX, centerY, size) {
 }
 
 // Update map transform (scale and position)
-function updateMapTransform() {
+function updateMapTransform(centerAfterZoom = false) {
     const svgElement = document.getElementById('hex-svg-map');
-    if (svgElement) {
-        svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
-        svgElement.style.transformOrigin = 'top left';
+    if (!svgElement) return;
+
+    // Get map container html object
+    const mapContainer = document.getElementById('map-container');
+    if (!mapContainer) return;
+
+    // Get container dimensions
+    mapContainerWidth = mapContainer.clientWidth;
+    mapContainerHeight = mapContainer.clientHeight;
+
+    // Calculate boundary --> distance to inset from map container
+    const boundaryX = Math.min(100, mapContainerWidth * .05);
+    const boundaryY = Math.min(100, mapContainerHeight * .05);
+
+    // Calculate boundaries for positioning the map
+    const visibleWidth = mapContainerWidth - boundaryX;
+    const visibleHeight = mapContainerHeight - boundaryY;
+
+    // Calculate scaled map dimensions
+    const scaledMapWidth = mapWidth * currentScale;
+    const scaledMapHeight = mapHeight * currentScale;
+
+    // Apply constraints
+    if (scaledMapWidth <= mapContainerWidth) {
+        // If map is narrower than container, center it horizontally
+        translateX = (mapContainerWidth - scaledMapWidth) / 2;
+    } else {
+        // Calculate how much we need to constrain the dragging
+        // This is the key correction - we're calculating based on visible area
+        const excessWidth = scaledMapWidth - visibleWidth;
+
+        // The left bound is negative because moving the map left means negative translate
+        const leftBound = -excessWidth;
+        const rightBound = boundaryX;
+
+        // Apply constraints
+        translateX = Math.max(leftBound, Math.min(rightBound, translateX));
+        console.log(`left bound: ${leftBound}`);
     }
+
+    if (scaledMapHeight <= mapContainerHeight) {
+        // If map is shorter than container, center it vertically
+        translateY = (mapContainerHeight - scaledMapHeight) / 2;
+    } else {
+        // Calculate how much we need to constrain the dragging
+        const excessHeight = scaledMapHeight - visibleHeight;
+
+        // The top bound is negative because moving the map up means negative translate
+        const topBound = -excessHeight;
+        const bottomBound = boundaryY;
+
+        // Apply constraints
+        translateY = Math.max(topBound, Math.min(bottomBound, translateY));
+    }
+
+    // Apply transform
+    svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    svgElement.style.transformOrigin = 'top left';
 }
 
 // Show hex details when clicked
@@ -392,18 +499,6 @@ function clearHexSelection() {
     }
 }
 
-function updateHexHighlight(x, y, highlight = true) {
-    if (hexMap[y] && hexMap[y][x]) {
-        if (highlight) {
-            hexMap[y][x].element.style.stroke = 'yellow';
-            hexMap[y][x].element.style.strokeWidth = '3';
-        } else {
-            hexMap[y][x].element.style.stroke = 'white';
-            hexMap[y][x].element.style.strokeWidth = '2';
-        }
-    }
-}
-
 // Mark a hex as explored or unexplored
 function markHexAsExplored(x, y, explored = true) {
     console.log(`Marking hex ${x},${y} as ${explored ? 'explored' : 'unexplored'}`);
@@ -440,3 +535,12 @@ function addNoteToHex(x, y, note) {
         }
     }
 }
+
+window.addEventListener('resize', function() {
+    const mapContainer = document.getElementById('map-container');
+    mapContainerWidth = mapContainer.clientWidth;
+    mapContainerHeight = mapContainer.clientHeight;
+
+    // Re-apply transform with new bounds
+    updateMapTransform();
+});
