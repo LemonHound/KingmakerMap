@@ -34,7 +34,9 @@
     <retain-sticky-names value="false" />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createUserMapLink.sql" connection-id="9874dc8a-0f22-4567-be5d-d3768166006c" session-id="MAIN" current-schema="pathfinder" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getMap.sql" connection-id="9874dc8a-0f22-4567-be5d-d3768166006c" session-id="MAIN" current-schema="pathfinder" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createMap.sql" connection-id="9874dc8a-0f22-4567-be5d-d3768166006c" session-id="MAIN" current-schema="pathfinder" />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />

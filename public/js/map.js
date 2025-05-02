@@ -65,7 +65,7 @@ function initializeMap() {
     addMapBackground(svgElement);
 
     // Generate the hex grid
-    GenerateMap(svgElement);
+    generateMap(svgElement);
 
     // Set up drag functionality
     setupDragControls(svgElement);
@@ -176,7 +176,7 @@ function updateMapImageTransform() {
     }
 }
 
-function GenerateMap(svgElement) {
+function generateMap(svgElement) {
     // Create a group for the hexes to apply transformations
     const hexGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     hexGroup.id = "hex-grid-group";
@@ -191,6 +191,54 @@ function GenerateMap(svgElement) {
         for (let col = 0; col < mapConfig.cols; col++) {
             createHex(hexGroup, row, col);
         }
+    }
+}
+
+async function saveMap() {
+    // Prepare map data to save
+    const mapData = {
+        hexes: hexMap.map(row => row.map(hex => ({
+            x: hex.x,
+            y: hex.y,
+            isExplored: hex.isExplored,
+            isControlled: hex.isControlled,
+            resources: hex.resources,
+            notes: hex.notes,
+            isVisible: hex.isVisible
+        }))),
+        config: mapConfig,
+        name: "StolenLands", // TODO: Take user input!
+        lastUpdated: new Date().toISOString(),
+        user: localStorage.getItem('username')
+    };
+
+    try {
+        // Determine if this is a create or update operation
+        // You could store a map ID in localStorage or another variable to track this
+        const mapId = localStorage.getItem('mapId');
+
+        let response;
+        if (mapId) {
+            // This is an update operation
+            response = await apiUtils.maps.update({
+                id: mapId,
+                ...mapData
+            });
+        } else {
+            // This is a create operation
+            response = await apiUtils.maps.create(mapData);
+
+            // Store the new map ID for future updates
+            if (response && response.id) {
+                localStorage.setItem('mapId', response.id);
+            }
+        }
+
+        console.log('Map saved successfully:', response);
+        return response;
+    } catch (error) {
+        console.error('Error saving map:', error);
+        throw error;
     }
 }
 
@@ -666,7 +714,6 @@ window.addEventListener('resize', function() {
 });
 
 
-
-
 // Export global functions
 window.initializeMap = initializeMap;
+window.saveMap = saveMap;

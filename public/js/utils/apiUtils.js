@@ -53,11 +53,11 @@ const apiUtils = {
     maps: {
         /**
          * Create a new map
-         * @param {object} mapData - Map data to create
+         * @param {object} data - Data needed to create map
          * @returns {Promise} - Promise resolving to the created map
          */
-        create(mapData) {
-            return apiUtils.request('/map/create', 'POST', mapData);
+        create(data) {
+            return apiUtils.request('/map/create', 'POST', data);
         },
 
         /**

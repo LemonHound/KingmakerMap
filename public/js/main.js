@@ -1,9 +1,9 @@
 // Main application entry point
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Pathfinder Kingmaker Campaign app initialized');
-
-    // Set up event listener for logout button
+    // Set up event listeners
     document.getElementById('logout-btn').addEventListener('click', logout);
+    document.getElementById('map-save').addEventListener('click', saveMap);
 
     // Check if user is already logged in (via stored token)
     const token = localStorage.getItem('authToken');
@@ -51,7 +51,7 @@ function updateUserInterface() {
     // Update username display
     const usernameDisplay = document.getElementById('username-display');
     if (usernameDisplay) {
-        usernameDisplay.textContent = `Logged in as: ${username} ${isDM ? '(DM)' : '(Player)'}`;
+        usernameDisplay.textContent = `Logged in as: ${username} ${isDM ? '(Admin)' : '(Player)'}`;
 
         // Show user info section
         document.getElementById('user-info').classList.remove('hidden');
