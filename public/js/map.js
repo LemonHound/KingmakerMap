@@ -17,6 +17,7 @@ let mapWidth = 0, mapHeight = 0;
 let mapBackgroundImage = null;
 const MAP_IMAGE_PATH = '../img/TheStolenLands.jpg';
 let mapConfig = {
+    mapID: -1, // set to -1 by default, and overwrite when saving for the first time
     name: "my map", // TODO: Give user a way to change name of map
     offsetX: -72,          // Horizontal offset of hexes relative to map
     offsetY: -60,          // Vertical offset of hexes relative to map
@@ -73,12 +74,9 @@ async function initializeMap() {
     console.log('map id: ', mapID);
 
     if(mapID != null){
+        mapConfig.mapID = mapID;
         const map = await apiUtils.maps.getMap({id: mapID});
-        console.log("map: ", map);
-
-        const mapJSON = JSON.stringify(map);
-        console.log("mapJSON: ", JSON.stringify(mapJSON));
-        await loadMap(svgElement, mapJSON);
+        await loadMap(svgElement, map);
     } else {
         console.log("mapID is null, generating new map...", mapID)
         generateMap(svgElement);
@@ -238,7 +236,7 @@ function generateMap(svgElement) {
     }
 }
 
-async function loadMap(svgElement, mapJSON) {
+async function loadMap(svgElement, map) {
     // Create a group for the hexes to apply transformations
     const hexGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     hexGroup.id = "hex-grid-group";
@@ -246,6 +244,8 @@ async function loadMap(svgElement, mapJSON) {
 
     // Apply map scale and translation
     hexGroup.setAttribute('transform', `scale(${mapConfig.hexScale})`);
+    const hexData = await apiUtils.hexes.getHexesByMapID({mapID: map.data.map_id});
+    console.log('hex data: ', hexData.data);
 
     // add each hex to the map
     // this is wrong, just leaving for reference for now
@@ -265,10 +265,7 @@ async function saveMap() {
     };
 
     try {
-        // Determine if this is a create or update operation
-        // You could store a map ID in localStorage or another variable to track this
         const mapID = localStorage.getItem('mapID');
-
         let response;
         if (mapID) { // map exists, update it in storage
             response = await apiUtils.maps.update({
@@ -278,11 +275,75 @@ async function saveMap() {
             if(response && response.id){
                 localStorage.setItem('mapID', response.id);
             }
+
+            // since map exists, hexes should also exist, but good to check to be certain
+            const existingHexData = await apiUtils.hexes.getHexesByMapID({
+                mapID: mapID
+            });
+
+            if (existingHexData.data.rows.length > 0){
+                // hex data exists, therefore need to update it
+                for(let i = 0; i < mapConfig.rows; i++){
+                    for(let j = 0; j < mapConfig.cols; j++){
+                        let tempHex = hexMap[i][j];
+                        await apiUtils.hexes.updateHex({
+                            mapID: mapID,
+                            x: tempHex.x,
+                            y: tempHex.y,
+                            name: tempHex.name,
+                            isExplored: tempHex.isExplored,
+                            isControlled: tempHex.isControlled,
+                            isVisible: tempHex.isVisible,
+                            resources: tempHex.resources,
+                            notes: tempHex.notes
+                        });
+                    }
+                }
+            } else {
+                // scenarios where map exists but hexes do not
+                for(let i = 0; i < mapConfig.rows; i++){
+                    for(let j = 0; j < mapConfig.cols; j++){
+                        let tempHex = hexMap[i][j];
+                        console.log('hex data being saved: ' + JSON.stringify(tempHex));
+                        await apiUtils.hexes.createHex({
+                            mapID: mapID,
+                            x: tempHex.x,
+                            y: tempHex.y,
+                            name: tempHex.name,
+                            isExplored: tempHex.isExplored,
+                            isControlled: tempHex.isControlled,
+                            isVisible: tempHex.isVisible,
+                            resources: tempHex.resources,
+                            notes: tempHex.notes
+                        });
+                    }
+                }
+            }
         } else { // map doesn't exist, create it
             response = await apiUtils.maps.create(mapData);
+            let mapID;
             // Store the new map ID for future updates
             if (response && response.id) {
+                mapID = response.id;
                 localStorage.setItem('mapID', response.id);
+            }
+
+            for(let i = 0; i < mapConfig.rows; i++){
+                for(let j = 0; j < mapConfig.cols; j++){
+                    let tempHex = hexMap[i][j];
+                    console.log('hex data being saved: ' + JSON.stringify(tempHex));
+                    await apiUtils.hexes.createHex({
+                        mapID: mapID,
+                        x: tempHex.x,
+                        y: tempHex.y,
+                        name: tempHex.name,
+                        isExplored: tempHex.isExplored,
+                        isControlled: tempHex.isControlled,
+                        isVisible: tempHex.isVisible,
+                        resources: tempHex.resources,
+                        notes: tempHex.notes
+                    });
+                }
             }
         }
 
@@ -422,6 +483,7 @@ function generateHex(hexGroup, row, col) {
     if (!hexMap[row]) hexMap[row] = [];
     hexMap[row][col] = {
         element: hexElement,
+        mapID: mapConfig.mapID,
         name: '', //TODO: Allow name to be changed later!
         x: col,
         y: row,

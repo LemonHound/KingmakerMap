@@ -57,7 +57,7 @@ let apiUtils = {
          * @returns {Promise} - Promise resolving to the created map
          */
         async create(data) {
-            return apiUtils.request('/api/map/create', 'POST', data);
+            return apiUtils.request('/api/map/create_map', 'POST', data);
         },
 
         /**
@@ -66,7 +66,7 @@ let apiUtils = {
          * @returns {Promise} - Promise resolving to the updated map
          */
         async update(mapData) {
-            return apiUtils.request('/api/map/update', 'POST', mapData);
+            return apiUtils.request('/api/map/update_map', 'POST', mapData);
         },
 
         /**
@@ -79,17 +79,22 @@ let apiUtils = {
         }
     },
 
-    /**
-     * Test-related API calls
-     */
-    test: {
+    hexes: {
         /**
-         * Test parameter replacement
-         * @param {string} testInput - Test input for parameter replacement
-         * @returns {Promise} - Promise resolving to the test result
+         * Get all hexes for the given mapID
+         * @param mapID
+         * @return {Promise<*>}
          */
-        test(testInput) {
-            return apiUtils.request('/api/map/test', 'POST', { TestInput: testInput });
+        async getHexesByMapID(mapID){
+            return apiUtils.request('/api/hexes/get_hexes_by_map_id', 'POST', mapID);
+        },
+
+        async updateHex(data) {
+            return apiUtils.request('/api/hexes/update_hex', 'POST', data);
+        },
+
+        async createHex(data){
+            return apiUtils.request('/api/hexes/create_hex', 'POST', data);
         }
     }
 };

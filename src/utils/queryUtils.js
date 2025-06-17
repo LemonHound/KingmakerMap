@@ -85,11 +85,8 @@ const createUser = async(username, password, is_dm) => {
  */
 const createMap = async(name, col_count, row_count, hex_scale, image_scale, image_scale_horizontal, image_scale_vertical, offset_x, offset_y) => {
     try {
-        console.log("queryUtils/createMap()");
         const db = getConnection();
-        console.log("connection established");
         const query = await getQuery('createMap');
-        console.log('query: ', query, '\n now attempting to pull results...');
         return await db.query(query, [name, col_count, row_count, hex_scale, image_scale, image_scale_horizontal, image_scale_vertical, offset_x, offset_y]);
     } catch (e){
         console.error('Failed to save map:', {
@@ -214,11 +211,58 @@ const getUserMapLink = async(value, bSearchByPersonID) => {
  * @param isVisible
  * @return {Promise<*>}
  */
-const createHex = async(map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, resource_json, notes, isVisible) => {
+const createHex = async(map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, isVisible, resource_json, notes) => {
     try{
         const db = getConnection();
         const query = await getQuery('createHex');
-        return await db.query(query, [map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, resource_json, notes, isVisible])
+        return await db.query(query, [map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, isVisible, resource_json, notes])
+    } catch (e) {
+        console.error('Failed to create hex:', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to create hex: ${e.message}`);
+    }
+}
+
+/**
+ * Updates an existing hex
+ * @param hex_id
+ * @param map_id
+ * @param x_coord
+ * @param y_coord
+ * @param hex_name
+ * @param is_explored
+ * @param is_controlled
+ * @param is_visible
+ * @param resources
+ * @param notes
+ * @return {Promise<*>}
+ */
+const updateHex = async(map_id,
+                        x_coord,
+                        y_coord,
+                        hex_name,
+                        is_explored,
+                        is_controlled,
+                        is_visible,
+                        resources,
+                        notes) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('updateHex');
+        return await db.query(query, [
+            map_id,
+            x_coord,
+            y_coord,
+            hex_name,
+            is_explored,
+            is_controlled,
+            is_visible,
+            resources,
+            notes])
     } catch (e) {
         console.error('Failed to create hex:', {
             error: e.message,
@@ -262,14 +306,32 @@ const getHexByCoord = async(x, y) => {
     }
 }
 
+const getHexesByMapID = async(map_id) => {
+    try {
+        const db = getConnection();
+        const query = await getQuery('getHexesByMapID');
+        return await db.query(query, [map_id]);
+    } catch (e){
+        console.error('Failed to get hex:', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to get hex: ${e.message}`);
+    }
+}
+
 module.exports = {
     getUsers,
     createUser,
     createMap,
     getMap,
     createHex,
+    updateHex,
     getHexByID,
     getHexByCoord,
+    getHexesByMapID,
     createUserMapLink,
     getUserMapLink,
     getPersonIDFromUsername,

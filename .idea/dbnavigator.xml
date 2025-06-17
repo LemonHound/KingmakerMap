@@ -43,17 +43,20 @@
     <retain-sticky-names value="false" />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createPerson.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createHex.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getPerson.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="public" />
-    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createUserMapLink.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/updateHex.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/table_setup_file.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getPersonFromMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
-    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getPersonIDFromUsername.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/updateMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/AdHocQueries.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
     <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getHexByCoord.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createPerson.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createUserMapLink.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getPersonIDFromUsername.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getAllHexes.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">
     <method-browser />

@@ -5,9 +5,9 @@ INSERT INTO kingmaker.hex (
     y_coord,
     is_explored,
     is_controlled,
+    is_visible,
     resources,
-    notes,
-    is_visible
+    notes
 ) VALUES (
     $1,
     $2,
@@ -18,4 +18,5 @@ INSERT INTO kingmaker.hex (
     $7,
     $8,
     $9
-);
+)
+returning hex_id

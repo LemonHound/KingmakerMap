@@ -3,14 +3,14 @@ const {getPersonIDFromUsername} = require('../utils/queryUtils')
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const {createMap, updateMap, createHex, getHex, createUserMapLink, getMap} = require('../utils/queryUtils');
+const {createMap, updateMap, createHex, updateHex, getHexesByMapID, createUserMapLink, getMap} = require('../utils/queryUtils');
 
 const router = express.Router();
 
 // JWT secret key (in production, this will be in an environment variable)
 const JWT_SECRET = 'pathfinder-campaign-secret-key';
 
-router.post('/create', async (req, res) => {
+router.post('/create_map', async (req, res) => {
 
     try {
         // Extract map data from the request body
@@ -37,23 +37,6 @@ router.post('/create', async (req, res) => {
         const personId = await getPersonIDFromUsername(username);
         await createUserMapLink(personId, mapId);
 
-        // Create hex data
-        for(let i = 0; i < hexMap.length; i++) {
-            for(let j = 0; j < hexMap[i].length; j++) {
-                await createHex(
-                    mapId,
-                    hexMap[i][j].name,
-                    hexMap[i][j].x,
-                    hexMap[i][j].y,
-                    hexMap[i][j].isExplored,
-                    hexMap[i][j].isControlled,
-                    hexMap[i][j].resources,
-                    hexMap[i][j].notes,
-                    hexMap[i][j].isVisible
-                )
-            }
-        }
-
         // Send back the newly created map ID and success message
         res.status(201).json({
             message: 'Map created successfully',
@@ -67,10 +50,9 @@ router.post('/create', async (req, res) => {
     }
 });
 
-router.post('/update', async (req, res) => {
+router.post('/update_map', async (req, res) => {
     try {
         const {id, config} = req.body;
-        console.log('config: ', config);
         const result = await updateMap(
             id,
             config.name,
@@ -102,6 +84,67 @@ router.post('/get_map', async (req, res) => {
             data: result.rows[0]
         });
     } catch (e) {
+        console.error('Error Fetching Map:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/get_hexes_by_map_id', async (req, res) => {
+    try{
+        const {mapID} = req.body;
+        const result = await getHexesByMapID(mapID);
+        res.status(200).json({
+            message: 'Map retrieved successfully',
+            data: result
+        });
+
+    } catch (e){
+        console.error('Error Fetching Map:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/update_hex', async (req, res) => {
+   try{
+       const {mapID,
+           x,
+           y,
+           name,
+           isExplored,
+           isControlled,
+           isVisible,
+           resources,
+           notes} = req.body;
+       const result = await updateHex(mapID, x, y, name, isExplored, isControlled, isVisible, resources, notes);
+       res.status(200).json({
+          message: 'Hex updated successfully',
+          data: result
+       });
+   } catch (e){
+       console.error('Error Fetching Map:', e);
+       res.status(500).json({ error: 'Internal server error' });
+   }
+});
+
+router.post('/create_hex', async (req, res) => {
+    try{
+        const {mapID,
+            x,
+            y,
+            name,
+            isExplored,
+            isControlled,
+            isVisible,
+            resources,
+            notes} = req.body;
+        const result = await createHex(mapID, name, x, y, isExplored, isControlled, isVisible, resources, notes);
+
+        // map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, resource_json, notes, isVisible
+        res.status(200).json({
+            message: 'Hex updated successfully',
+            data: result
+        });
+    } catch (e){
         console.error('Error Fetching Map:', e);
         res.status(500).json({ error: 'Internal server error' });
     }

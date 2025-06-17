@@ -43,7 +43,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/map', mapRoutes);
-app.use('/api/test', mapRoutes);
+app.use('/api/hexes', mapRoutes);
 
 // Default route serves index.html
 app.get('/', (req, res) => {
