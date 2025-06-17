@@ -1,15 +1,12 @@
-// public/js/utils/apiUtils.js
-// Full file contents
-
 /**
  * Utility functions for making API calls
  */
-const apiUtils = {
+let apiUtils = {
     /**
      * Base URL for API endpoints
      * Change this if your API is hosted elsewhere
      */
-    baseUrl: '',
+    baseUrl: 'http://localhost:3000',
 
     /**
      * Make a request to the API
@@ -18,8 +15,10 @@ const apiUtils = {
      * @param {object} data - Data to send in the request body
      * @returns {Promise} - Promise resolving to the API response
      */
-    async request(endpoint, method = 'GET', data = null) {
+    async request(endpoint = "", method = 'POST', data = null) {
+        console.log("request initiated");
         const url = this.baseUrl + endpoint;
+        console.log("request URL: ", url);
 
         const options = {
             method,
@@ -33,6 +32,7 @@ const apiUtils = {
         }
 
         try {
+            console.log('response awaiting: ', url, options);
             const response = await fetch(url, options);
 
             if (!response.ok) {
@@ -56,8 +56,8 @@ const apiUtils = {
          * @param {object} data - Data needed to create map
          * @returns {Promise} - Promise resolving to the created map
          */
-        create(data) {
-            return apiUtils.request('/map/create', 'POST', data);
+        async create(data) {
+            return apiUtils.request('/api/map/create', 'POST', data);
         },
 
         /**
@@ -65,18 +65,17 @@ const apiUtils = {
          * @param {object} mapData - Map data to update
          * @returns {Promise} - Promise resolving to the updated map
          */
-        update(mapData) {
-            return apiUtils.request('/map/update', 'POST', mapData);
+        async update(mapData) {
+            return apiUtils.request('/api/map/update', 'POST', mapData);
         },
 
         /**
          * Get map data
-         * @param {string|number} id - Map ID (optional)
+         * @param {{id: string}} id - Map ID (optional)
          * @returns {Promise} - Promise resolving to the map data
          */
-        getMap(id = null) {
-            const endpoint = id ? `/map/get_map?id=${id}` : '/map/get_map';
-            return apiUtils.request(endpoint, 'GET');
+        async getMap(id) {
+            return apiUtils.request('/api/map/get_map', 'POST', id);
         }
     },
 
@@ -95,5 +94,12 @@ const apiUtils = {
     }
 };
 
-// Export the utility for use in other files
-export default apiUtils;
+// Make available in global scope for browser
+if (typeof window !== 'undefined') {
+    window.apiUtils = apiUtils;
+}
+
+// Make available for server-side
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = apiUtils;
+}

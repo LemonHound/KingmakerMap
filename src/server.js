@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { initializeDatabase } = require('./database/db');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -11,8 +10,30 @@ const mapRoutes = require('./routes/map');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS configuration
+const corsOptions = {
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:3001'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+        'Origin',
+        'X-Requested-With',
+        'Content-Type',
+        'Accept',
+        'Authorization',
+        'Cache-Control',
+        'X-Access-Token'
+    ],
+    credentials: true, // Enable if you're using cookies or authentication
+    optionsSuccessStatus: 200 // For legacy browser support
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -22,6 +43,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/map', mapRoutes);
+app.use('/api/test', mapRoutes);
 
 // Default route serves index.html
 app.get('/', (req, res) => {
@@ -31,13 +53,9 @@ app.get('/', (req, res) => {
 // Initialize database and start server
 async function startServer() {
     try {
-        // Initialize database
-        await initializeDatabase();
-        console.log('Database initialized successfully');
-
         // Start the server
         app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            console.log(`Server running on  http://localhost:${PORT}`);
         });
     } catch (error) {
         console.error('Failed to start server:', error);

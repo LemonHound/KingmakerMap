@@ -1,8 +1,8 @@
-insert into user_map(
-    username,
+insert into kingmaker.person_map(
+    person_id,
     map_id
 )
 values(
-    '$_username$_',
-    '$_map_id$_'
+    $1,
+    $2
 )

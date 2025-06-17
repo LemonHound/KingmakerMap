@@ -1,3 +1,5 @@
+
+
 // Main application entry point
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Pathfinder Kingmaker Campaign app initialized');
@@ -10,9 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (token) {
         // If token exists, validate it and show the map
         validateToken(token)
-            .then(valid => {
+            .then(async valid => {
+                console.log('token is valid, showing map...');
                 if (valid) {
-                    showMap();
+                    await showMap();
                 } else {
                     // If token is invalid, show login form
                     showLoginForm();
@@ -29,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Helper function to show the map interface
-function showMap() {
+async function showMap() {
     console.log('Showing map interface');
 
     // Hide auth section, show map container
@@ -39,8 +42,15 @@ function showMap() {
     // Update the user interface with user info
     updateUserInterface();
 
-    // Initialize the map
-    initializeMap();
+/*    try{
+        if(typeof initializeMap === 'function'){
+            await initializeMap();
+        } else {
+            console.error('initializeMap function not yet available')
+        }
+    } catch (e){
+        console.error('Error initializing map: ', e);
+    }*/
 }
 
 // Update user interface based on logged in status

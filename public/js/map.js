@@ -1,4 +1,3 @@
-import apiUtils from './utils/apiUtils.js';
 
 // Hex map related functions
 let hexMap = [];
@@ -8,6 +7,7 @@ const HEX_SIZE = 90; // Size of hexagons in pixels
 
 // Variables for drag functionality
 let isDragging = false;
+let hexClickX, hexClickY;
 let startX, startY;
 let translateX = 0, translateY = 0;
 let mapContainerWidth = 0, mapContainerHeight = 0;
@@ -17,6 +17,7 @@ let mapWidth = 0, mapHeight = 0;
 let mapBackgroundImage = null;
 const MAP_IMAGE_PATH = '../img/TheStolenLands.jpg';
 let mapConfig = {
+    name: "my map", // TODO: Give user a way to change name of map
     offsetX: -72,          // Horizontal offset of hexes relative to map
     offsetY: -60,          // Vertical offset of hexes relative to map
     hexScale: 1.0,       // Scale factor for hex grid (leave this as 1 - some weird bug when this is changed.  use the image scales instead.)
@@ -28,8 +29,8 @@ let mapConfig = {
 };
 
 // Initialize the hex map when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    initializeMap();
+document.addEventListener('DOMContentLoaded', async function () {
+    await initializeMap();
 });
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -38,23 +39,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Initialize the hex map
-function initializeMap() {
-    console.log('Initializing hex map');
+async function initializeMap() {
+
+    console.log('Initializing hex map...');
     const mapContainer = document.getElementById('map-container');
     const hexMapContainer = document.getElementById('hex-map');
+
+    hexMapContainer.classList.remove('hidden');
+    hexMapContainer.classList.add('visible');
+
+    // Resize map container
+    mapContainer.classList.add('with-details');
 
     // Check if elements exist
     if (!mapContainer || !hexMapContainer) {
         console.error('Map container or hex map container not found');
-        return; // Exit if elements don't exist yet
+        return;
     }
 
+    // start with a blank HTML object for the hex map container area
     hexMapContainer.innerHTML = '';
-
-    // Get container dimensions explicitly from map-container
-    mapContainerWidth = mapContainer.clientWidth;
-    mapContainerHeight = mapContainer.clientHeight;
-    console.log(`Map container dimensions: ${mapContainerWidth}x${mapContainerHeight}`);
 
     // Create SVG element
     const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -64,8 +68,21 @@ function initializeMap() {
     // Add background image first (so it's behind hexes)
     addMapBackground(svgElement);
 
-    // Generate the hex grid
-    generateMap(svgElement);
+    // Generate or load the map
+    const mapID = localStorage.getItem('mapID');
+    console.log('map id: ', mapID);
+
+    if(mapID != null){
+        const map = await apiUtils.maps.getMap({id: mapID});
+        console.log("map: ", map);
+
+        const mapJSON = JSON.stringify(map);
+        console.log("mapJSON: ", JSON.stringify(mapJSON));
+        await loadMap(svgElement, mapJSON);
+    } else {
+        console.log("mapID is null, generating new map...", mapID)
+        generateMap(svgElement);
+    }
 
     // Set up drag functionality
     setupDragControls(svgElement);
@@ -74,6 +91,29 @@ function initializeMap() {
     translateX = 0;
     translateY = 0;
     updateMapDimensions();
+
+    // Set up the rest of your event listeners here
+    document.getElementById('map-container').addEventListener('wheel', handleWheel);
+
+    // Return initialized state
+    return {
+        hexMap,
+        selectedHex,
+        currentScale,
+        mapContainerWidth,
+        mapContainerHeight,
+        translateX,
+        translateY,
+        mapWidth,
+        mapHeight,
+        mapConfig,
+        mapBackgroundImage,
+        MAP_IMAGE_PATH,
+        isDragging,
+        startX,
+        startY,
+        HEX_SIZE
+    };
 }
 
 function updateMapDimensions() {
@@ -141,6 +181,9 @@ function addMapBackground(svgElement) {
         const mapWidth = mapConfig.cols * HEX_SIZE * Math.cos(Math.PI / 180 * 30) + 1.5 * HEX_SIZE + mapConfig.offsetX;
         const mapHeight = mapConfig.rows * HEX_SIZE * 0.75 + HEX_SIZE;
 
+        console.log("map width: ", mapWidth);
+        console.log("map height: ", mapHeight);
+
         // Set SVG dimensions
         svgElement.setAttribute('width', Math.max(mapWidth, imageWidth * mapConfig.imageScaleHorizontal));
         svgElement.setAttribute('height', Math.max(mapHeight, imageHeight * mapConfig.imageScaleVertical));
@@ -180,6 +223,7 @@ function generateMap(svgElement) {
     // Create a group for the hexes to apply transformations
     const hexGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     hexGroup.id = "hex-grid-group";
+    svgElement.appendChild(hexGroup);
 
     // Only apply scale, remove translation
     hexGroup.setAttribute('transform', `scale(${mapConfig.hexScale})`);
@@ -189,7 +233,25 @@ function generateMap(svgElement) {
     // Generate hexes
     for (let row = 0; row < mapConfig.rows; row++) {
         for (let col = 0; col < mapConfig.cols; col++) {
-            createHex(hexGroup, row, col);
+            generateHex(hexGroup, row, col);
+        }
+    }
+}
+
+async function loadMap(svgElement, mapJSON) {
+    // Create a group for the hexes to apply transformations
+    const hexGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    hexGroup.id = "hex-grid-group";
+    svgElement.appendChild(hexGroup);
+
+    // Apply map scale and translation
+    hexGroup.setAttribute('transform', `scale(${mapConfig.hexScale})`);
+
+    // add each hex to the map
+    // this is wrong, just leaving for reference for now
+    for (let row = 0; row < mapConfig.rows; row++) {
+        for (let col = 0; col < mapConfig.cols; col++) {
+            generateHex(hexGroup, row, col);
         }
     }
 }
@@ -197,40 +259,30 @@ function generateMap(svgElement) {
 async function saveMap() {
     // Prepare map data to save
     const mapData = {
-        hexes: hexMap.map(row => row.map(hex => ({
-            x: hex.x,
-            y: hex.y,
-            isExplored: hex.isExplored,
-            isControlled: hex.isControlled,
-            resources: hex.resources,
-            notes: hex.notes,
-            isVisible: hex.isVisible
-        }))),
         config: mapConfig,
-        name: "StolenLands", // TODO: Take user input!
-        lastUpdated: new Date().toISOString(),
-        user: localStorage.getItem('username')
+        username: localStorage.getItem('username'),
+        hexMap: hexMap
     };
 
     try {
         // Determine if this is a create or update operation
         // You could store a map ID in localStorage or another variable to track this
-        const mapId = localStorage.getItem('mapId');
+        const mapID = localStorage.getItem('mapID');
 
         let response;
-        if (mapId) {
-            // This is an update operation
+        if (mapID) { // map exists, update it in storage
             response = await apiUtils.maps.update({
-                id: mapId,
+                id: mapID,
                 ...mapData
             });
-        } else {
-            // This is a create operation
+            if(response && response.id){
+                localStorage.setItem('mapID', response.id);
+            }
+        } else { // map doesn't exist, create it
             response = await apiUtils.maps.create(mapData);
-
             // Store the new map ID for future updates
             if (response && response.id) {
-                localStorage.setItem('mapId', response.id);
+                localStorage.setItem('mapID', response.id);
             }
         }
 
@@ -243,7 +295,6 @@ async function saveMap() {
 }
 
 function setupDragControls(svgElement) {
-    let isHexClick = false;
 
     // Apply cursor style immediately to indicate draggable area
     svgElement.style.cursor = 'grab';
@@ -257,10 +308,12 @@ function setupDragControls(svgElement) {
         // Check if the click is on a hex
         if (e.target.tagName.toLowerCase() === 'polygon') {
             // Mark this as a potential hex click
-            isHexClick = true;
+            hexClickX = parseInt(e.target.getAttribute('data-x'));
+            hexClickY = parseInt(e.target.getAttribute('data-y'));
         } else {
             // If not clicking on a hex, start dragging immediately
-            isHexClick = false;
+            hexClickX = null;
+            hexClickY = null;
             startDrag(e);
         }
     });
@@ -275,15 +328,11 @@ function setupDragControls(svgElement) {
 
             // If significant movement detected (works for both hex and non-hex areas)
             if (movedX > 3 || movedY > 3) {
-                if (isHexClick) {
-                    // If it started on a hex but moved enough, it's a drag not a click
-                    isHexClick = false;
-                }
-                // Start dragging
                 startDrag(e);
             }
         }
         else if (isDragging) {
+
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
 
@@ -306,32 +355,16 @@ function setupDragControls(svgElement) {
     // Helper function to start dragging
     function startDrag(e) {
         isDragging = true;
+        hexClickX = -1;
+        hexClickY = -1;
         svgElement.style.cursor = 'grabbing';
-        svgElement.classList.add('grabbing');
         e.preventDefault(); // Prevent text selection during drag
     }
 
     // Mouse up event - stop dragging
     document.addEventListener('mouseup', (e) => {
-        if (isDragging) {
-            isDragging = false;
-            svgElement.style.cursor = 'grab';
-            svgElement.classList.remove('grabbing');
-
-            // If this was a small movement, it might be a click on a hex
-            const movedX = Math.abs(e.clientX - startX);
-            const movedY = Math.abs(e.clientY - startY);
-
-            if (movedX < 3 && movedY < 3 && isHexClick && e.target.tagName.toLowerCase() === 'polygon') {
-                // Process as a hex click
-                const x = parseInt(e.target.getAttribute('data-x'));
-                const y = parseInt(e.target.getAttribute('data-y'));
-                if (!isNaN(x) && !isNaN(y)) {
-                    showHexDetails(x, y);
-                }
-            }
-        }
-        isHexClick = false;
+        isDragging = false;
+        svgElement.style.cursor = 'grab';
     });
 
     // Mouse leave event - stop dragging if mouse leaves the window
@@ -339,9 +372,7 @@ function setupDragControls(svgElement) {
         if (isDragging) {
             isDragging = false;
             svgElement.style.cursor = 'grab';
-            svgElement.classList.remove('grabbing');
         }
-        isHexClick = false;
     });
 
     // Prevent default drag behavior
@@ -351,7 +382,7 @@ function setupDragControls(svgElement) {
 }
 
 // Create a single hex
-function createHex(hexGroup, row, col) {
+function generateHex(hexGroup, row, col) {
     // Calculate center position for the hex
     const width = HEX_SIZE;
     const height = HEX_SIZE;
@@ -378,7 +409,8 @@ function createHex(hexGroup, row, col) {
 
     // Add click event for hex selection
     hexElement.addEventListener('click', (e) => {
-        if (!isDragging) {
+        if(hexClickX.toString() === e.target.getAttribute('data-x') && hexClickY.toString() === e.target.getAttribute('data-y')){
+            isDragging = false;
             showHexDetails(col, row);
         }
     });
@@ -390,10 +422,11 @@ function createHex(hexGroup, row, col) {
     if (!hexMap[row]) hexMap[row] = [];
     hexMap[row][col] = {
         element: hexElement,
+        name: '', //TODO: Allow name to be changed later!
         x: col,
         y: row,
         isExplored: false,
-        controlledBy: null,
+        isControlled: false,
         resources: null,
         notes: null,
         isVisible: true
@@ -480,7 +513,8 @@ function updateMapTransform(centerAfterZoom = false) {
 
 // Show hex details when clicked
 function showHexDetails(x, y) {
-    console.log(`Hex clicked: x=${x}, y=${y}`);
+
+    if(isDragging){return;}
 
     // Set as selected hex
     selectedHex = { x, y };
@@ -713,7 +747,10 @@ window.addEventListener('resize', function() {
     updateMapTransform();
 });
 
-
-// Export global functions
 window.initializeMap = initializeMap;
 window.saveMap = saveMap;
+
+window.mapModule = {
+    initializeMap,
+    saveMap
+};

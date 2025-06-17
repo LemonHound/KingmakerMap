@@ -57,6 +57,8 @@ async function handleLogin(event) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('username', data.user.username);
         localStorage.setItem('isDM', data.user.isDM);
+        localStorage.setItem('personID', data.user.id);
+        localStorage.setItem('mapID', data.map.map_id);
 
         // Redirect to main interface
         window.location.reload(); // This will reload the page and the main.js will handle showing the map
@@ -151,6 +153,7 @@ async function handleRegistration(event) {
         });
 
         const data = await response.json();
+        console.log('response: ', data);
 
         if (!response.ok) {
             throw new Error(data.error || 'Registration failed');
@@ -164,7 +167,7 @@ async function handleRegistration(event) {
         alert('Registration successful!');
 
         // Show the map interface
-        showMap();
+        await showMap();
     } catch (error) {
         console.error('Registration error:', error);
         alert(error.message || 'Registration failed. Please try again.');
@@ -176,6 +179,8 @@ function logout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('username');
     localStorage.removeItem('isDM');
+    localStorage.removeItem('personID');
+    localStorage.removeItem('mapID');
     showLoginForm();
 }
 

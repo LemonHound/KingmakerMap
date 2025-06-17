@@ -11,14 +11,23 @@
   </component>
   <component name="DBNavigator.Project.DatabaseAssistantManager">
     <assistants>
+      <assistant-state connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" default-profile-name="" selected-profile-name="" selected-model-name="" assistant-type="GENERIC" selected-action="SHOW_SQL" availability="UNAVAILABLE" acknowledgement="NONE">
+        <messages />
+      </assistant-state>
       <assistant-state connection-id="9874dc8a-0f22-4567-be5d-d3768166006c" default-profile-name="" selected-profile-name="" selected-model-name="" assistant-type="GENERIC" selected-action="SHOW_SQL" availability="UNAVAILABLE" acknowledgement="NONE">
         <messages />
       </assistant-state>
     </assistants>
   </component>
+  <component name="DBNavigator.Project.DatabaseBrowserManager">
+    <autoscroll-to-editor value="false" />
+    <autoscroll-from-editor value="true" />
+    <show-object-properties value="true" />
+    <loaded-nodes />
+  </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="9874dc8a-0f22-4567-be5d-d3768166006c">
-      <console name="Pathfinder Database" type="STANDARD" schema="pathfinder" session="Main" />
+    <connection id="da1b58e6-3b36-4202-ac21-3ae686d81616">
+      <console name="Connection" type="STANDARD" schema="postgres" session="Main" />
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
@@ -28,15 +37,31 @@
     <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="9874dc8a-0f22-4567-be5d-d3768166006c" />
+    <connection id="da1b58e6-3b36-4202-ac21-3ae686d81616" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createUserMapLink.sql" connection-id="9874dc8a-0f22-4567-be5d-d3768166006c" session-id="MAIN" current-schema="pathfinder" />
-    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getMap.sql" connection-id="9874dc8a-0f22-4567-be5d-d3768166006c" session-id="MAIN" current-schema="pathfinder" />
-    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createMap.sql" connection-id="9874dc8a-0f22-4567-be5d-d3768166006c" session-id="MAIN" current-schema="pathfinder" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createPerson.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getPerson.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="public" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createUserMapLink.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/table_setup_file.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getPersonFromMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getPersonIDFromUsername.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/updateMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/AdHocQueries.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/createMap.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+    <mapping file-url="file://$PROJECT_DIR$/src/database/queries/getHexByCoord.sql" connection-id="da1b58e6-3b36-4202-ac21-3ae686d81616" session-id="MAIN" current-schema="kingmaker" />
+  </component>
+  <component name="DBNavigator.Project.MethodExecutionManager">
+    <method-browser />
+    <execution-history>
+      <group-entries value="true" />
+      <execution-inputs />
+    </execution-history>
+    <execution-variables-cache />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
@@ -44,34 +69,31 @@
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection id="9874dc8a-0f22-4567-be5d-d3768166006c" active="true" signed="true">
+      <connection id="da1b58e6-3b36-4202-ac21-3ae686d81616" active="true" signed="true">
         <database>
-          <name value="Pathfinder Database" />
+          <name value="Kingmaker DB" />
           <description value="" />
-          <database-type value="SQLITE" />
+          <database-type value="POSTGRES" />
           <config-type value="BASIC" />
-          <database-version value="3.44" />
+          <database-version value="16.9" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />
-          <url-type value="FILE" />
-          <host value="" />
-          <port value="" />
-          <database value="" />
+          <url-type value="DATABASE" />
+          <host value="192.168.1.225" />
+          <port value="5432" />
+          <database value="kingmaker" />
           <tns-folder value="" />
           <tns-profile value="" />
-          <files>
-            <file path="C:\Website Development\KingmakerMap\pathfinder.db" schema="pathfinder" />
-          </files>
-          <type value="NONE" />
-          <user value="" />
+          <type value="USER_PASSWORD" />
+          <user value="zook" />
           <token-type value="" />
           <token-config-file value="" />
           <token-profile value="" />
-          <session-user value="" />
+          <session-user value="zook" />
         </database>
         <properties>
-          <auto-commit value="false" />
+          <auto-commit value="true" />
         </properties>
         <ssh-settings>
           <active value="false" />
@@ -89,7 +111,7 @@
         </ssl-settings>
         <details>
           <charset value="UTF-8" />
-          <session-management value="true" />
+          <session-management value="false" />
           <ddl-file-binding value="true" />
           <database-logging value="true" />
           <connect-automatically value="true" />
@@ -235,8 +257,8 @@
           <object-type name="DBLINK" enabled="false" />
           <object-type name="CREDENTIAL" enabled="false" />
         </lookup-objects>
-        <force-database-load value="false" />
-        <prompt-connection-selection value="true" />
+        <force-database-load value="true" />
+        <prompt-connection-selection value="false" />
         <prompt-schema-selection value="true" />
       </lookup-filters>
     </navigation-settings>
@@ -282,6 +304,7 @@
       <qualified-text-editor text-length-threshold="300">
         <content-types>
           <content-type name="Text" enabled="true" />
+          <content-type name="Properties" enabled="true" />
           <content-type name="XML" enabled="true" />
           <content-type name="DTD" enabled="true" />
           <content-type name="HTML" enabled="true" />
@@ -331,7 +354,7 @@
             <filter-element type="OBJECT" id="index" selected="true" />
             <filter-element type="OBJECT" id="constraint" selected="true" />
             <filter-element type="OBJECT" id="trigger" selected="true" />
-            <filter-element type="OBJECT" id="synonym" selected="false" />
+            <filter-element type="OBJECT" id="synonym" selected="true" />
             <filter-element type="OBJECT" id="sequence" selected="true" />
             <filter-element type="OBJECT" id="procedure" selected="true" />
             <filter-element type="OBJECT" id="function" selected="true" />
@@ -342,21 +365,21 @@
             <filter-element type="OBJECT" id="dblink" selected="true" />
           </user-schema>
           <public-schema>
-            <filter-element type="OBJECT" id="table" selected="false" />
-            <filter-element type="OBJECT" id="view" selected="false" />
-            <filter-element type="OBJECT" id="materialized view" selected="false" />
-            <filter-element type="OBJECT" id="index" selected="false" />
-            <filter-element type="OBJECT" id="constraint" selected="false" />
-            <filter-element type="OBJECT" id="trigger" selected="false" />
-            <filter-element type="OBJECT" id="synonym" selected="false" />
-            <filter-element type="OBJECT" id="sequence" selected="false" />
-            <filter-element type="OBJECT" id="procedure" selected="false" />
-            <filter-element type="OBJECT" id="function" selected="false" />
-            <filter-element type="OBJECT" id="package" selected="false" />
-            <filter-element type="OBJECT" id="type" selected="false" />
-            <filter-element type="OBJECT" id="dimension" selected="false" />
-            <filter-element type="OBJECT" id="cluster" selected="false" />
-            <filter-element type="OBJECT" id="dblink" selected="false" />
+            <filter-element type="OBJECT" id="table" selected="true" />
+            <filter-element type="OBJECT" id="view" selected="true" />
+            <filter-element type="OBJECT" id="materialized view" selected="true" />
+            <filter-element type="OBJECT" id="index" selected="true" />
+            <filter-element type="OBJECT" id="constraint" selected="true" />
+            <filter-element type="OBJECT" id="trigger" selected="true" />
+            <filter-element type="OBJECT" id="synonym" selected="true" />
+            <filter-element type="OBJECT" id="sequence" selected="true" />
+            <filter-element type="OBJECT" id="procedure" selected="true" />
+            <filter-element type="OBJECT" id="function" selected="true" />
+            <filter-element type="OBJECT" id="package" selected="true" />
+            <filter-element type="OBJECT" id="type" selected="true" />
+            <filter-element type="OBJECT" id="dimension" selected="true" />
+            <filter-element type="OBJECT" id="cluster" selected="true" />
+            <filter-element type="OBJECT" id="dblink" selected="true" />
           </public-schema>
           <any-schema>
             <filter-element type="OBJECT" id="table" selected="true" />
@@ -489,8 +512,8 @@
     <operation-settings>
       <transactions>
         <uncommitted-changes>
-          <on-project-close value="ASK" />
-          <on-disconnect value="ASK" />
+          <on-project-close value="COMMIT" />
+          <on-disconnect value="COMMIT" />
           <on-autocommit-toggle value="ASK" />
         </uncommitted-changes>
         <multiple-uncommitted-changes>

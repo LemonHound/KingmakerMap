@@ -169,7 +169,7 @@ main {
 }
 
 #hex-svg-map polygon {
-    cursor: pointer;
+    cursor: inherit;
     transition: stroke 0.2s, stroke-width 0.2s, opacity 0.2s;
 }
 
