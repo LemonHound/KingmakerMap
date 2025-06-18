@@ -254,6 +254,7 @@ async function loadMap(svgElement, map) {
             generateHex(hexGroup, row, col);
         }
     }
+    updateHexes(hexData.data);
 }
 
 async function saveMap() {
@@ -495,6 +496,18 @@ function generateHex(hexGroup, row, col) {
     };
 }
 
+function updateHexes(hexData){
+
+    for(let hex of hexData.rows){
+        hexMap[hex.y_coord][hex.x_coord].isVisible = hex.is_visible;
+        hexMap[hex.y_coord][hex.x_coord].isExplored = hex.is_explored;
+        hexMap[hex.y_coord][hex.x_coord].isControlled = hex.is_controlled;
+        hexMap[hex.y_coord][hex.x_coord].resources = hex.resources;
+        hexMap[hex.y_coord][hex.x_coord].notes = hex.notes;
+        hexMap[hex.y_coord][hex.x_coord].name = hex.name;
+    }
+}
+
 // Calculate the six points of a hexagon
 function calculateHexPoints(centerX, centerY, size) {
     const points = [];
@@ -624,14 +637,14 @@ function showHexDetails(x, y) {
     const hexInfoElement = document.getElementById('hex-info');
     hexInfoElement.innerHTML = `
         <p><strong>Coordinates:</strong> X:${x}, Y:${y}</p>
-        <p><strong>Status:</strong> ${hex.isExplored ? 'Explored' : 'Unexplored'}</p>
-        ${hex.controlledBy ? `<p><strong>Controlled By:</strong> ${hex.controlledBy}</p>` : ''}
-        ${hex.resources ? `<p><strong>Resources:</strong> ${hex.resources}</p>` : ''}
-        ${hex.notes ? `<p><strong>Notes:</strong> ${hex.notes}</p>` : ''}
+        <p><strong>Status:</strong> ${hex.isControlled ? 'Controlled' : hex.isExplored ? 'Explored' : 'Unexplored'}</p>
+        <p><strong>Resources:</strong> ${hex.resources ? hex.resources : ''}</p>
         <div class=${isDM ? 'hex-actions' : 'hidden'}>
-            <button id="mark-explored">${hex.isExplored ? 'Mark as Unexplored' : 'Mark as Explored'}</button>
             <button id="change-visibility">${hex.isVisible ? 'Hide This Hex' : 'Show This Hex'}</button>
             <button id="restore-surrounding-hexes">Restore Surrounding Hexes</button>
+            <br/>
+            <button id="mark-explored">${hex.isExplored ? 'Mark as Unexplored' : 'Mark as Explored'}</button>
+            <button id="mark-controlled">${hex.isControlled ? 'Mark Not Controlled' : 'Mark as Controlled'}</button>
         </div>
         <div class="hex-actions">
             <button id="add-note">Add Note</button>
