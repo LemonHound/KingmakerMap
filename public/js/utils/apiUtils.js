@@ -16,9 +16,7 @@ let apiUtils = {
      * @returns {Promise} - Promise resolving to the API response
      */
     async request(endpoint = "", method = 'POST', data = null) {
-        console.log("request initiated");
         const url = this.baseUrl + endpoint;
-        console.log("request URL: ", url);
 
         const options = {
             method,
@@ -32,14 +30,11 @@ let apiUtils = {
         }
 
         try {
-            console.log('response awaiting: ', url, options);
             const response = await fetch(url, options);
-
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || `Request failed with status ${response.status}`);
             }
-
             return response.json();
         } catch (error) {
             console.error('API request error:', error);
@@ -80,11 +75,7 @@ let apiUtils = {
     },
 
     hexes: {
-        /**
-         * Get all hexes for the given mapID
-         * @param mapID
-         * @return {Promise<*>}
-         */
+
         async getHexesByMapID(mapID){
             return apiUtils.request('/api/hexes/get_hexes_by_map_id', 'POST', mapID);
         },
@@ -95,6 +86,21 @@ let apiUtils = {
 
         async createHex(data){
             return apiUtils.request('/api/hexes/create_hex', 'POST', data);
+        },
+
+        async getHexNotes(data){
+            return apiUtils.request('/api/hexes/get_hex_notes', 'POST', data);
+        },
+
+        async addNoteToHex(data){
+            return apiUtils.request('/api/hexes/add_note_to_hex', 'POST', data);
+        }
+    },
+
+    person : {
+
+        async getPersonFromID(data){
+            return apiUtils.request('/api/person/get_person_from_id', 'POST', data);
         }
     }
 };

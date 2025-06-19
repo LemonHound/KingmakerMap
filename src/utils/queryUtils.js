@@ -39,7 +39,6 @@ const getPersonIDFromUsername = async(username) => {
         const db = getConnection();
         const query = await getQuery('getPersonIDFromUsername');
         const result = await db.query(query, [username]);
-        console.log('result: ', result.rows[0].person_id);
         return result.rows[0].person_id;
     } catch (error) {
         throw new Error(`Failed to load users: ${error.message}`);
@@ -56,7 +55,6 @@ const getPersonIDFromUsername = async(username) => {
 const createUser = async(username, password, is_dm) => {
     try{
         const db = getConnection();
-
         const query = await getQuery('createPerson');
         return await db.query(query, [username, password, is_dm]);
     } catch (error) {
@@ -211,11 +209,11 @@ const getUserMapLink = async(value, bSearchByPersonID) => {
  * @param isVisible
  * @return {Promise<*>}
  */
-const createHex = async(map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, isVisible, resource_json, notes) => {
+const createHex = async(map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, isVisible, resource_json) => {
     try{
         const db = getConnection();
         const query = await getQuery('createHex');
-        return await db.query(query, [map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, isVisible, resource_json, notes])
+        return await db.query(query, [map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, isVisible, resource_json])
     } catch (e) {
         console.error('Failed to create hex:', {
             error: e.message,
@@ -248,8 +246,7 @@ const updateHex = async(map_id,
                         is_explored,
                         is_controlled,
                         is_visible,
-                        resources,
-                        notes) => {
+                        resources) => {
     try{
         const db = getConnection();
         const query = await getQuery('updateHex');
@@ -261,8 +258,7 @@ const updateHex = async(map_id,
             is_explored,
             is_controlled,
             is_visible,
-            resources,
-            notes])
+            resources])
     } catch (e) {
         console.error('Failed to create hex:', {
             error: e.message,
@@ -322,6 +318,54 @@ const getHexesByMapID = async(map_id) => {
     }
 }
 
+const getHexNotes = async(x, y) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('getHexNotes');
+        return await db.query(query, [x, y]);
+    } catch(e){
+        console.error('Failed to get hex notes:', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to get hex notes: ${e.message}`);
+    }
+}
+
+const addNoteToHex = async(x, y, mapID, personID, text) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('addNoteToHex');
+        return await db.query(query, [x, y, mapID, personID, text]);
+    } catch(e){
+        console.error('Failed to add note to hex:', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to get hex notes: ${e.message}`);
+    }
+}
+
+const getPersonFromID = async(person_id) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('getPersonFromID');
+        return await db.query(query, [person_id]);
+    } catch(e){
+        console.error('Failed to get person details for person id:', person_id, {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to get person details: ${e.message}`);
+    }
+}
+
 module.exports = {
     getUsers,
     createUser,
@@ -332,8 +376,11 @@ module.exports = {
     getHexByID,
     getHexByCoord,
     getHexesByMapID,
+    getHexNotes,
     createUserMapLink,
     getUserMapLink,
     getPersonIDFromUsername,
-    updateMap
+    updateMap,
+    addNoteToHex,
+    getPersonFromID
 };

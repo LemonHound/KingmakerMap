@@ -3,7 +3,8 @@ const {getPersonIDFromUsername} = require('../utils/queryUtils')
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const {createMap, updateMap, createHex, updateHex, getHexesByMapID, createUserMapLink, getMap} = require('../utils/queryUtils');
+const {createMap, updateMap, createHex, updateHex, getHexesByMapID, createUserMapLink, getMap, getHexNotes, addNoteToHex, getPersonFromID} = require('../utils/queryUtils');
+const {json} = require("express");
 
 const router = express.Router();
 
@@ -70,7 +71,7 @@ router.post('/update_map', async (req, res) => {
             mapID: result
         });
     } catch (e) {
-        console.error('Error Updating Map:', e);
+        console.error('Error updating map:', e);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -84,7 +85,7 @@ router.post('/get_map', async (req, res) => {
             data: result.rows[0]
         });
     } catch (e) {
-        console.error('Error Fetching Map:', e);
+        console.error('Error fetching map:', e);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -99,7 +100,7 @@ router.post('/get_hexes_by_map_id', async (req, res) => {
         });
 
     } catch (e){
-        console.error('Error Fetching Map:', e);
+        console.error('Error fetching hexes:', e);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -121,7 +122,7 @@ router.post('/update_hex', async (req, res) => {
           data: result
        });
    } catch (e){
-       console.error('Error Fetching Map:', e);
+       console.error('Error updating hex:', e);
        res.status(500).json({ error: 'Internal server error' });
    }
 });
@@ -138,15 +139,55 @@ router.post('/create_hex', async (req, res) => {
             resources,
             notes} = req.body;
         const result = await createHex(mapID, name, x, y, isExplored, isControlled, isVisible, resources, notes);
-
-        // map_id, hex_name, x_coord, y_coord, is_explored, is_controlled, resource_json, notes, isVisible
         res.status(200).json({
             message: 'Hex updated successfully',
             data: result
         });
     } catch (e){
-        console.error('Error Fetching Map:', e);
+        console.error('Error creating hex:', e);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/get_hex_notes', async (req, res) => {
+    try{
+        const {x, y} = req.body;
+        const result = await getHexNotes(x, y);
+        res.status(200).json({
+            message: 'Hex notes retrieved successfully',
+            data: result
+        });
+    } catch (e){
+    console.error('Error fetching hex notes:', e);
+    res.status(500).json({ error: 'Internal server error' });
+}
+});
+
+router.post('/add_note_to_hex', async (req, res) => {
+   try{
+       const{x, y, mapID, personID, text} = req.body;
+       const result = await addNoteToHex(x, y, mapID, personID, text);
+       res.status(200).json({
+          message: 'Note added to hex',
+          data: result
+       });
+   } catch (e){
+       console.error('Error adding note to hex:', e);
+       res.status(500).json({ error: 'Internal server error' });
+   }
+});
+
+router.post('/get_person_from_id', async (req, res) => {
+    try{
+        const{person_id} = req.body;
+        const result = await getPersonFromID(person_id);
+        res.status(200).json({
+            message: 'Person details retrieved successfully',
+            data: result
+        });
+    } catch (e){
+        console.error('Error getting person details:', e);
+        res.status(500).json({error: 'Internal server error'});
     }
 });
 

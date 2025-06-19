@@ -79,11 +79,11 @@ async function initializeMap() {
         await loadMap(svgElement, map);
     } else {
         console.log("mapID is null, generating new map...", mapID)
-        generateMap(svgElement);
+        await generateMap(svgElement);
     }
 
     // Set up drag functionality
-    setupDragControls(svgElement);
+    await setupDragControls(svgElement);
 
     // Initialize map position
     translateX = 0;
@@ -217,7 +217,7 @@ function updateMapImageTransform() {
     }
 }
 
-function generateMap(svgElement) {
+async function generateMap(svgElement) {
     // Create a group for the hexes to apply transformations
     const hexGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     hexGroup.id = "hex-grid-group";
@@ -231,7 +231,7 @@ function generateMap(svgElement) {
     // Generate hexes
     for (let row = 0; row < mapConfig.rows; row++) {
         for (let col = 0; col < mapConfig.cols; col++) {
-            generateHex(hexGroup, row, col);
+            await generateHex(hexGroup, row, col);
         }
     }
 }
@@ -251,13 +251,23 @@ async function loadMap(svgElement, map) {
     // this is wrong, just leaving for reference for now
     for (let row = 0; row < mapConfig.rows; row++) {
         for (let col = 0; col < mapConfig.cols; col++) {
-            generateHex(hexGroup, row, col);
+            await generateHex(hexGroup, row, col);
         }
     }
     updateHexes(hexData.data);
 }
 
 async function saveMap() {
+
+    // display the saving overlay, to prevent issues while saving
+    const overlay = document.getElementById('savingOverlay');
+    const text = overlay.querySelector('.overlay-text');
+    text.textContent = "Saving...";
+    overlay.classList.add('show');
+
+    // Prevent scrolling while overlay is shown
+    document.body.style.overflow = 'hidden';
+
     // Prepare map data to save
     const mapData = {
         config: mapConfig,
@@ -295,8 +305,7 @@ async function saveMap() {
                             isExplored: tempHex.isExplored,
                             isControlled: tempHex.isControlled,
                             isVisible: tempHex.isVisible,
-                            resources: tempHex.resources,
-                            notes: tempHex.notes
+                            resources: tempHex.resources
                         });
                     }
                 }
@@ -314,8 +323,7 @@ async function saveMap() {
                             isExplored: tempHex.isExplored,
                             isControlled: tempHex.isControlled,
                             isVisible: tempHex.isVisible,
-                            resources: tempHex.resources,
-                            notes: tempHex.notes
+                            resources: tempHex.resources
                         });
                     }
                 }
@@ -348,6 +356,11 @@ async function saveMap() {
             }
         }
 
+        // remove the saving overlay
+        const overlay = document.getElementById('savingOverlay');
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+
         console.log('Map saved successfully:', response);
         return response;
     } catch (error) {
@@ -356,7 +369,7 @@ async function saveMap() {
     }
 }
 
-function setupDragControls(svgElement) {
+async function setupDragControls(svgElement) {
 
     // Apply cursor style immediately to indicate draggable area
     svgElement.style.cursor = 'grab';
@@ -444,7 +457,7 @@ function setupDragControls(svgElement) {
 }
 
 // Create a single hex
-function generateHex(hexGroup, row, col) {
+async function generateHex(hexGroup, row, col) {
     // Calculate center position for the hex
     const width = HEX_SIZE;
     const height = HEX_SIZE;
@@ -470,10 +483,10 @@ function generateHex(hexGroup, row, col) {
     hexElement.style.strokeWidth = '2';
 
     // Add click event for hex selection
-    hexElement.addEventListener('click', (e) => {
+    hexElement.addEventListener('click', async (e) => {
         if(hexClickX.toString() === e.target.getAttribute('data-x') && hexClickY.toString() === e.target.getAttribute('data-y')){
             isDragging = false;
-            showHexDetails(col, row);
+            await showHexDetails(col, row);
         }
     });
 
@@ -587,7 +600,7 @@ function updateMapTransform(centerAfterZoom = false) {
 }
 
 // Show hex details when clicked
-function showHexDetails(x, y) {
+async function showHexDetails(x, y) {
 
     if(isDragging){return;}
 
@@ -633,7 +646,34 @@ function showHexDetails(x, y) {
     // Check if user is DM
     const isDM = localStorage.getItem('isDM') === 'true';
 
-    // Update hex info
+    // gather hex notes
+    const hexComments = await apiUtils.hexes.getHexNotes({
+        x: x,
+        y: y
+    });
+
+    // build hex notes section, which will be inserted into the hex details below
+    let notesHTML = `<div class="notes-container">`;
+    if(hexComments && hexComments.data.rows && hexComments.data.rows.length > 0){
+        for (const row of hexComments.data.rows) {
+            if(!row.notes) continue;
+            for (const note of row.notes) {
+                const formattedDate = note.date ? new Date(note.date).toLocaleDateString() : '';
+                notesHTML += `
+                <div class="note-item">
+                    <div class="note-header">
+                        <span class="note-player">Player: ${note.player || 'Unknown'}</span>
+                        ${formattedDate ? `<span class="note-date">${formattedDate}</span>` : ''}
+                    </div>
+                    <div class="note-text">${note.text || ''}</div>
+                </div>
+                `;
+            }
+        }
+    }
+    notesHTML += `</div>`;
+
+    // build the hex details section
     const hexInfoElement = document.getElementById('hex-info');
     hexInfoElement.innerHTML = `
         <p><strong>Coordinates:</strong> X:${x}, Y:${y}</p>
@@ -652,7 +692,7 @@ function showHexDetails(x, y) {
         </div>
         <div class="hex-notes">
             <h1>Notes:</h1>
-            Notes go here
+            ${notesHTML}
         </div>
     `;
 
@@ -666,14 +706,14 @@ function showHexDetails(x, y) {
         }
     });
 
-    document.getElementById('mark-explored').addEventListener('click', () => {
-        markHexAsExplored(x, y, !hex.isExplored);
+    document.getElementById('mark-explored').addEventListener('click', async () => {
+        await markHexAsExplored(x, y, !hex.isExplored);
     });
 
-    document.getElementById('add-note').addEventListener('click', () => {
-        const note = prompt('Add a note for this hex:', hex.notes || '');
+    document.getElementById('add-note').addEventListener('click', async () => {
+        const note = prompt('Add a note for this hex:', '');
         if (note !== null) {
-            addNoteToHex(x, y, note);
+            await addNoteToHex(x, y, note);
         }
     });
 
@@ -681,8 +721,8 @@ function showHexDetails(x, y) {
         closeHexDetails();
     });
 
-    document.getElementById('change-visibility').addEventListener('click', () => {
-        invertVisibility(x, y);
+    document.getElementById('change-visibility').addEventListener('click', async () => {
+        await invertVisibility(x, y);
     });
 
     document.getElementById('restore-surrounding-hexes').addEventListener('click', () => {
@@ -718,7 +758,7 @@ function clearHexSelection() {
 }
 
 // Mark a hex as explored or unexplored
-function markHexAsExplored(x, y, explored = true) {
+async function markHexAsExplored(x, y, explored = true) {
     console.log(`Marking hex ${x},${y} as ${explored ? 'explored' : 'unexplored'}`);
 
     // Update our data structure
@@ -734,12 +774,12 @@ function markHexAsExplored(x, y, explored = true) {
 
         // Update hex details display if this is the currently selected hex
         if (selectedHex && selectedHex.x === x && selectedHex.y === y) {
-            showHexDetails(x, y);
+            await showHexDetails(x, y);
         }
     }
 }
 
-function invertVisibility(x, y){
+async function invertVisibility(x, y){
     if(hexMap[y] && hexMap[y][x]) {
         hexMap[y][x].isVisible = !hexMap[y][x].isVisible;
     }
@@ -747,7 +787,7 @@ function invertVisibility(x, y){
     if(hex.isVisible !== false){
         hex.element.style.display = '';
         hex.element.style.opacity = '1';
-        showHexDetails(x, y);
+        await showHexDetails(x, y);
     } else {
         hex.element.style.display = 'none';
         closeHexDetails();
@@ -780,16 +820,25 @@ function restoreSurroundingHexes(x, y){
 }
 
 // Add a note to a hex
-function addNoteToHex(x, y, note) {
-    console.log(`Adding note to hex ${x},${y}:`);
+async function addNoteToHex(x, y, note) {
+    console.log(`Adding note to hex ${x},${y}: ${note}`);
+    const personID = localStorage.getItem('personID');
+    const mapID = localStorage.getItem('mapID');
+    console.log('added by', personID, 'for map', mapID);
 
     // Update our data structure
     if (hexMap[y] && hexMap[y][x]) {
-        hexMap[y][x].notes = note;
+        await apiUtils.hexes.addNoteToHex({
+            x: x,
+            y: y,
+            mapID: mapID,
+            personID: personID,
+            text: note
+        })
 
         // Update hex details display if this is the currently selected hex
         if (selectedHex && selectedHex.x === x && selectedHex.y === y) {
-            showHexDetails(x, y);
+            await showHexDetails(x, y);
         }
     }
 }
