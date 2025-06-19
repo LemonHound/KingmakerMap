@@ -7,11 +7,16 @@ const HEX_SIZE = 90; // Size of hexagons in pixels
 
 // Variables for drag functionality
 let isDragging = false;
+let isCanDrag = false;
 let hexClickX, hexClickY;
 let startX, startY;
 let translateX = 0, translateY = 0;
 let mapContainerWidth = 0, mapContainerHeight = 0;
 let mapWidth = 0, mapHeight = 0;
+
+// Variables for zoom functionality
+let mouseX = 0;
+let mouseY = 0;
 
 // Map image
 let mapBackgroundImage = null;
@@ -375,30 +380,35 @@ async function setupDragControls(svgElement) {
     svgElement.style.cursor = 'grab';
 
     // Mouse down event - start dragging
-    svgElement.addEventListener('mousedown', (e) => {
+    document.addEventListener('mousedown', (e) => {
         // Always record the start position regardless of target
         startX = e.clientX;
         startY = e.clientY;
 
         // Check if the click is on a hex
-        if (e.target.tagName.toLowerCase() === 'polygon') {
-            // Mark this as a potential hex click
+        const gameContainer = document.getElementById('hex-map');
+        if (gameContainer.contains(e.target)) {
+            isCanDrag = true;
             hexClickX = parseInt(e.target.getAttribute('data-x'));
             hexClickY = parseInt(e.target.getAttribute('data-y'));
         } else {
-            // If not clicking on a hex, start dragging immediately
+            isCanDrag = false;
             hexClickX = null;
             hexClickY = null;
-            startDrag(e);
         }
     });
 
     // Small movement threshold to differentiate between click and drag
     document.addEventListener('mousemove', (e) => {
+
+        // save mouse position for global usage
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
         // Only process mousemove if the mouse button is down (isDragging or potential drag)
-        if (!isDragging && e.buttons === 1) {
+        if (!isDragging && isCanDrag && e.buttons === 1) {
             // Measure movement distance
-            const movedX = Math.abs(e.clientX - startX);
+            const movedX = Math.abs(startX - startX);
             const movedY = Math.abs(e.clientY - startY);
 
             // If significant movement detected (works for both hex and non-hex areas)
@@ -480,7 +490,8 @@ async function generateHex(hexGroup, row, col) {
     // Style the hexagon
     hexElement.style.fill = 'rgba(0,0,0,0)';
     hexElement.style.stroke = 'white';
-    hexElement.style.strokeWidth = '2';
+    hexElement.style.strokeWidth = '1';
+    hexElement.style.opacity = '.6';
 
     // Add click event for hex selection
     hexElement.addEventListener('click', async (e) => {
@@ -537,7 +548,7 @@ function calculateHexPoints(centerX, centerY, size) {
 }
 
 // Update map transform (scale and position)
-function updateMapTransform(centerAfterZoom = false) {
+function updateMapTransform(centerAfterZoom = false, oldScale = null, zoomMouseX = null, zoomMouseY = null, isZoomOut = false) {
     const svgElement = document.getElementById('hex-svg-map');
     if (!svgElement) return;
 
@@ -561,13 +572,43 @@ function updateMapTransform(centerAfterZoom = false) {
     const scaledMapWidth = mapWidth * currentScale;
     const scaledMapHeight = mapHeight * currentScale;
 
+    // Handle zoom adjustments if this is a zoom operation
+    if (centerAfterZoom && oldScale !== null && zoomMouseX !== null && zoomMouseY !== null) {
+        if (isZoomOut) {
+            // For zoom out, keep the center of the visible area centered
+            const centerX = mapContainerWidth / 2;
+            const centerY = mapContainerHeight / 2;
+
+            // Calculate the point in the old scaled coordinate system
+            const pointInOldMap = {
+                x: (centerX - translateX) / oldScale,
+                y: (centerY - translateY) / oldScale
+            };
+
+            // Calculate new translation to keep this point at the center
+            translateX = centerX - (pointInOldMap.x * currentScale);
+            translateY = centerY - (pointInOldMap.y * currentScale);
+        } else {
+            // For zoom in, zoom towards mouse position
+            // Calculate the point in the map coordinate system that the mouse is over
+            const pointInMap = {
+                x: (zoomMouseX - translateX) / oldScale,
+                y: (zoomMouseY - translateY) / oldScale
+            };
+
+            // Calculate new translation to keep the mouse over the same map point
+            translateX = zoomMouseX - (pointInMap.x * currentScale);
+            translateY = zoomMouseY - (pointInMap.y * currentScale);
+        }
+    }
+
     // Apply constraints
     if (scaledMapWidth <= mapContainerWidth) {
         // If map is narrower than container, center it horizontally
         translateX = (mapContainerWidth - scaledMapWidth) / 2;
     } else {
         // Calculate how much we need to constrain the dragging
-        // This is the key correction - we're calculating based on visible area
+        // Calculating based on visible area
         const excessWidth = scaledMapWidth - visibleWidth;
 
         // The left bound is negative because moving the map left means negative translate
@@ -576,7 +617,6 @@ function updateMapTransform(centerAfterZoom = false) {
 
         // Apply constraints
         translateX = Math.max(leftBound, Math.min(rightBound, translateX));
-        console.log(`left bound: ${leftBound}`);
     }
 
     if (scaledMapHeight <= mapContainerHeight) {
@@ -628,8 +668,8 @@ async function showHexDetails(x, y) {
     highlightElement.setAttribute('data-x', x);
     highlightElement.setAttribute('data-y', y);
     highlightElement.style.fill = 'rgba(0,0,0,0)';
-    highlightElement.style.stroke = 'yellow';
-    highlightElement.style.strokeWidth = '3';
+    highlightElement.style.stroke = '#eda104';
+    highlightElement.style.strokeWidth = '4';
     highlightElement.id = 'hex-highlight';
 
     // Add highlight to the group
@@ -846,18 +886,21 @@ async function addNoteToHex(x, y, note) {
 function handleWheel(e) {
     e.preventDefault();
 
+    // Store the old scale for zoom calculations
+    const oldScale = currentScale;
+
     // Determine zoom direction
     if (e.deltaY < 0) {
         // Zoom in
         if (currentScale < 2.4) {
             currentScale += 0.2;
-            updateMapTransform(true);
+            updateMapTransform(true, oldScale, mouseX, mouseY);
         }
     } else {
         // Zoom out
         if (currentScale > 0.6) {
             currentScale -= 0.2;
-            updateMapTransform(true);
+            updateMapTransform(true, oldScale, mouseX, mouseY, true); // Pass true for zoom out
         }
     }
 }

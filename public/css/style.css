@@ -1,3 +1,36 @@
+:root {
+    /* buttons */
+    --button: #b45309;
+    --button-active: #8b3a00;
+    --button-border: #1a0f05;
+    --button-shadow: rgba(26, 15, 5, 0.4);
+    --button-admin: #8b2635;
+    --button-admin-active: #5c1a23;
+    --button-text: "Cinzel";
+    --button-text-color: #f9f6f0;
+
+    /* colors */
+    --background: #2a251f;
+    --background-details: #1a1612;
+    --background-map: #3d2914;
+    --border-main: #f9f6f0;
+    --border-modal: #2d4a22;
+    --border-lite: #3d3027;
+    --hex-select: #e6b800;
+
+    /* fonts */
+    --font-title: "Cinzel Decorative";
+    --font-heading: "Cinzel";
+    --font-body: "Crimson Text";
+    --font-ui: "Libre Baskerville";
+    --font-medieval: "UnifrakturMaguntia";
+    --font-title-color: #d6d2c7;
+    --font-subtitle-color: #f9f6f0;
+    --font-heading-color: #d4c4a8;
+    --font-body-color: #f9f6f0;
+    --font-ui-color: #e6ddd4;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -5,10 +38,10 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-heading), serif;
     line-height: 1.6;
-    color: #a5abac;
-    background-color: #132211;
+    color: var(--font-body-color);
+    background-color: var(--background);
     height: 100vh;
     overflow: hidden;
 }
@@ -24,7 +57,7 @@ body {
 }
 
 header {
-    color: #ecf0f1;
+    color: var(--font-title-color);
     padding: 0.5rem 1rem;
     margin-bottom: 0.5rem;
     border-radius: 3px;
@@ -75,12 +108,14 @@ header h1 {
 
 #logout-btn {
     padding: 0.2rem 0.5rem;
-    background-color: #b030f1;
+    background-color: var(--button);
+    border: var(--button-border);
+    box-shadow: var(--button-shadow);
     font-size: 0.8rem;
 }
 
 #logout-btn:hover{
-    background-color: #8e2bc0;
+    background-color: var(--button-active);
 }
 
 .header-right {
@@ -90,7 +125,7 @@ header h1 {
 }
 
 #auth-section {
-    background-color: #34495e;
+    background-color: var(--background-details);
     padding: 1rem;
     border-radius: 5px;
     max-width: 400px;
@@ -104,28 +139,29 @@ header h1 {
 label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #ecf0f1;
+    color: var(--font-heading-color);
 }
 
 input[type="text"],
 input[type="password"] {
     width: 100%;
     padding: 0.5rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--background-details);
     border-radius: 3px;
 }
 
 button {
-    background-color: #b030f1;
-    color: white;
-    border: none;
+    background-color: var(--button);
+    color: var(--button-text-color);
+    border: var(--button-border);
+    box-shadow: var(--button-shadow);
     padding: 0.5rem 1rem;
     border-radius: 3px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #8e2bc0;
+    background-color: var(--button-active);
 }
 
 main {
@@ -143,8 +179,8 @@ main {
     position: relative;
     height: 100%;
     overflow: hidden;
-    border: 1px solid #555;
-    background-color: #1a1a1a;
+    border: 1px solid var(--border-main);
+    background-color: var(--background-map);
     transition: width 0.3s ease;
 }
 
@@ -178,15 +214,15 @@ main {
 }
 
 #hex-svg-map polygon:hover {
-    stroke: #ffcc00;
+    stroke: var(--hex-select);
 }
 
 #hex-details {
     width: 0;
     height: 100%;
     overflow-y: auto;
-    background-color: #2e2d2d;
-    border-left: 1px solid #555;
+    background-color: var(--background-details);
+    border-left: 1px solid var(--border-modal);
     transition: width 0.3s ease;
     padding: 0;
 }
@@ -204,7 +240,7 @@ main {
 
 #hex-details h3 {
     margin-bottom: 1rem;
-    color: #ecf0f1;
+    color: var(--font-heading-color);
 }
 
 .hex-actions {
@@ -247,14 +283,14 @@ main {
 }
 
 .dm-actions button {
-    background-color: #c0392b;
-    border: 1px solid white;
+    background-color: var(--button-admin);
+    border: 1px solid var(--border-modal);
     padding: 0.2rem 0.5rem;
     font-size: 0.8rem;
 }
 
 .dm-actions button:hover {
-    background-color: #a93226;
+    background-color: var(--button-admin-active);
 }
 
 .details-header {
@@ -271,15 +307,16 @@ main {
     padding: 0 5px;
 }
 .close-button:hover {
-    color: #666;
+    color: var(--button-active);
 }
 
 #map-controls button {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: none;
-    background: rgb(197, 193, 193);
+    border: var(--button-border);
+    background: var(--button);
+    box-shadow: var(--button-shadow);
     font-weight: bold;
     cursor: pointer;
     margin-left: 5px;
@@ -289,16 +326,16 @@ main {
 .notes-container {
     max-height: 400px;
     overflow-y: auto;
-    border-top: 5px #f0f0f0;
-    border-bottom: 5px #f0f0f0;
-    border-left: 2px #f0f0f0;
-    border-right: 2px #f0f0f0;
+    border-top: 5px var(--border-main);
+    border-bottom: 5px var(--border-main);
+    border-left: 2px var(--border-main);
+    border-right: 2px var(--border-main);
     border-style: double solid;
     padding: 8px;
 }
 
 .note-item {
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-main);
     padding: 12px 0;
     margin-bottom: 8px;
 }
@@ -318,24 +355,27 @@ main {
 
 .note-player {
     font-weight: bold;
-    color: #e3d5d5;
-    font-size: 14px;
+    color: var(--font-heading-color);
+    font-size: 24px;
+    font-family: var(--font-heading), serif;
 }
 
 .note-date {
-    font-size: 12px;
-    color: #9ba7b5;
+    font-size: 14px;
+    color: var(--font-ui-color);
     font-style: italic;
+    font-family: var(--font-ui), serif;
 }
 
 .note-text {
-    font-size: 13px;
+    font-size: 20px;
+    font-family: var(--font-ui), serif;
     line-height: 1.4;
-    color: #addcaf;
+    color: var(--font-body-color);
     padding: 4px 0;
     white-space: pre-wrap;
     word-wrap: break-word;
-    border-top: 1px dashed rgba(240, 240, 240, 0.44);
+    border-top: 1px dashed var(--border-lite);
 }
 
 .overlay {
@@ -365,11 +405,12 @@ main {
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    font-family: Arial, sans-serif;
+    font-family: var(--font-body), serif;
 }
 
 .overlay-text {
     font-size: 18px;
-    color: #333;
+    color: black;
     margin-bottom: 15px;
+    font-family: var(--font-body), serif;
 }
