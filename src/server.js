@@ -36,12 +36,6 @@ const corsOptions = {
     optionsSuccessStatus: 200 // For legacy browser support
 };
 
-// testing
-app.use((req, res, next) => {
-    console.log('Origin:', req.headers.origin);
-    next();
-});
-
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());

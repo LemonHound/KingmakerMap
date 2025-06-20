@@ -6,7 +6,7 @@ let apiUtils = {
      * Base URL for API endpoints
      * Change this if your API is hosted elsewhere
      */
-    baseUrl: window.location.origin,
+    baseUrl: 'https://inisgorm.xyz',
 
     /**
      * Make a request to the API
