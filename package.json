@@ -20,6 +20,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.15.6",
+    "powershell": "^2.3.3",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

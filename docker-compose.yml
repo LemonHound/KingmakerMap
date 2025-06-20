@@ -1,6 +1,10 @@
 services:
   kingmaker-web:
-    build: .
+    build:
+      context: .
+      args:
+        CACHEBUST: ${CACHEBUST:-1}
+      no_cache: true
     container_name: kingmaker-web-dev
     image: kazooks/kingmaker:latest
     ports:
