@@ -1,3 +1,3 @@
 update kingmaker."hex"
-set is_controlled = $3
-where x_coord = $1 and y_coord = $2
+set is_controlled = $4
+where x_coord = $1 and y_coord = $2 and map_id = $3

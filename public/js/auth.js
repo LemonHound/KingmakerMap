@@ -168,7 +168,7 @@ async function handleRegistration(event) {
         return;
     }
 
-    if (!dmMapLink){
+    if (!dmMapLink && !isDM){
         alert('DM map link is required');
         return;
     }

@@ -54,7 +54,7 @@ async function showMapLink() {
     } else {
         // no mapID exists, which means the map needs to be saved first.
         // prompt the DM to save the map
-        prompt('You must save the map to generate a map link.');
+        alert('You must save the map to generate a map link.');
     }
 }
 

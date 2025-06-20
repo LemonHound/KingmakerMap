@@ -15,7 +15,7 @@ const JWT_SECRET = 'pathfinder-campaign-secret-key';
 // Register a new user
 router.post('/register', async (req, res) => {
     const { username, password, isDM, dmMapLink } = req.body;
-    let mapID;
+    let mapID = null;
 
     // Basic validation
     if (!username || !password) {
@@ -23,12 +23,16 @@ router.post('/register', async (req, res) => {
     }
 
     if(!isDM){
+        console.log('not the dm');
         // map link is required
         const mapData = await getMapFromDMLink(dmMapLink);
         mapID = (mapData && mapData.rows[0]) ? mapData.rows[0].map_id : null;
         if(!mapID){
             return res.status(408).json({error: 'invalid map link provided'});
         }
+    } else {
+        // user is DM, therefore mapID should be null - always force generate a new map
+        mapID = null;
     }
 
     try {

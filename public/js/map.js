@@ -265,6 +265,7 @@ async function loadMap(svgElement, map) {
 
     // Apply map scale and translation
     hexGroup.setAttribute('transform', `scale(${mapConfig.hexScale})`);
+    console.log('map id during LoadMap: ', map.data.map_id);
     const hexData = await apiUtils.hexes.getHexesByMapID({mapID: map.data.map_id});
 
     // add each hex to the map
@@ -285,6 +286,7 @@ async function saveHex() {
         if(!selectedHex) return;
         selectedHex.name = selectedHex.name || 'zz00';
 
+        console.log('save hex map id:', selectedHex.mapID);
         const response = await apiUtils.hexes.updateHex({
             mapID: selectedHex.mapID,
             x: selectedHex.x,
@@ -343,6 +345,7 @@ async function saveMap() {
                 mapID: mapID
             });
 
+            console.log('map ID before saving all hexes: ', mapID);
             if (!(existingHexData.data.rows.length > 0)){
                 // no hex data exists - shouldn't ever happen
                 for(let i = 0; i < mapConfig.rows; i++){
@@ -368,9 +371,9 @@ async function saveMap() {
                 response = await apiUtils.maps.create(mapData);
                 let mapID;
                 // Store the new map ID for future updates
-                if (response && response.id) {
-                    mapID = response.id;
-                    localStorage.setItem('mapID', response.id);
+                if (response && response.data.map_id) {
+                    mapID = response.data.map_id;
+                    localStorage.setItem('mapID', mapID);
                 }
 
                 // create the hexes as well, since they must not exist
@@ -397,8 +400,6 @@ async function saveMap() {
         const overlay = document.getElementById('savingOverlay');
         overlay.classList.remove('show');
         document.body.style.overflow = '';
-
-        console.log('Map saved successfully:', response);
         return response;
     } catch (error) {
         console.error('Error saving map:', error);
@@ -523,7 +524,11 @@ async function generateHex(hexGroup, row, col, hexData = null) {
     hexElement.style.fill = 'rgba(0,0,0,0)';
     hexElement.style.stroke = 'white';
     hexElement.style.strokeWidth = '1';
-    hexElement.style.opacity = hexData.is_visible ? '.6' : '0';
+    if(hexData){
+        hexElement.style.opacity = hexData.is_visible ? '.6' : '0';
+    } else {
+        hexElement.style.opacity = '.6';
+    }
 
     // Add click event for hex selection
     hexElement.addEventListener('click', async (e) => {
@@ -718,9 +723,11 @@ async function showHexDetails(x, y) {
     const isDM = localStorage.getItem('isDM') === 'true';
 
     // gather hex notes
+    console.log('hex notes map ID: ', mapConfig.mapID);
     const hexComments = await apiUtils.hexes.getHexNotes({
         x: x,
-        y: y
+        y: y,
+        mapID: mapConfig.mapID
     });
 
     // build hex notes section, which will be inserted into the hex details below
@@ -745,13 +752,15 @@ async function showHexDetails(x, y) {
     notesHTML += `</div>`;
 
     // gather the rest of the hex info
+    console.log('mapID for GetHexDetails: ', mapConfig.mapID);
     const result = await apiUtils.hexes.getHexDetails({
         x: x,
-        y: y
+        y: y,
+        mapID: mapConfig.mapID
     });
     const hexDetail = result.data.rows[0];
 
-    document.getElementById('hex-name').textContent = hexDetail.hex_name ? hexDetail.hex_name : "ZZ00";
+    document.getElementById('hex-name').textContent = hexDetail.hex_name ? hexDetail.hex_name : "undefined";
 
     // build the hex details section
     const hexInfoElement = document.getElementById('hex-info');
@@ -808,9 +817,10 @@ async function showHexDetails(x, y) {
     document.getElementById('change-name').addEventListener('click', async () => {
         let newName = prompt('New Name?');
         await apiUtils.hexes.updateHexName({
-           x: x,
-           y: y,
-           newName: newName
+            x: x,
+            y: y,
+            mapID: mapConfig.mapID,
+            newName: newName
         });
         document.getElementById('hex-name').textContent = newName;
     });
@@ -852,9 +862,10 @@ async function markHexAsExplored(x, y, explored = true) {
         hexMap[y][x].isExplored = explored;
 
         await apiUtils.hexes.updateHexExplored({
-           x: x,
-           y: y,
-           isExplored: explored
+            x: x,
+            y: y,
+            mapID: mapConfig.mapID,
+            isExplored: explored
         });
 
         // Update hex details display if this is the currently selected hex
@@ -868,9 +879,11 @@ async function markHexAsControlled(x, y, isControlled){
     if (hexMap[y] && hexMap[y][x]) {
         hexMap[y][x].isControlled = isControlled;
 
-        await apiUtils.hexes.updateHexExplored({
+        console.log('map ID during hex controlled update: ', mapConfig.mapID);
+        await apiUtils.hexes.updateHexControlled({
             x: x,
             y: y,
+            mapID: mapConfig.mapID,
             isControlled: isControlled
         });
 
@@ -898,6 +911,7 @@ async function invertVisibility(x, y){
     await apiUtils.hexes.updateHexVisibility({
         x: x,
         y: y,
+        mapID: mapConfig.mapID,
         isVisible: hexMap[y][x].isVisible
     });
 }
@@ -926,6 +940,7 @@ async function restoreSurroundingHexes(x, y){
             await apiUtils.hexes.updateHexVisibility({
                 x: x,
                 y: y,
+                mapID: mapConfig.mapID,
                 isVisible: true
             });
         }

@@ -179,8 +179,8 @@ router.post('/create_hex', async (req, res) => {
 
 router.post('/get_hex_notes', async (req, res) => {
     try{
-        const {x, y} = req.body;
-        const result = await getHexNotes(x, y);
+        const {x, y, mapID} = req.body;
+        const result = await getHexNotes(x, y, mapID);
         res.status(200).json({
             message: 'Hex notes retrieved successfully',
             data: result
@@ -221,8 +221,8 @@ router.post('/get_person_from_id', async (req, res) => {
 
 router.post('/update_hex_name', async (req, res) => {
    try{
-       const{x, y, newName} = req.body;
-       const result = await updateHexName(x, y, newName);
+       const{x, y, mapID, newName} = req.body;
+       const result = await updateHexName(x, y, mapID, newName);
        res.status(200).json({
           message: 'Hex name updated successfully',
           data: result
@@ -235,8 +235,8 @@ router.post('/update_hex_name', async (req, res) => {
 
 router.post('/get_hex_details', async (req, res) => {
     try{
-        const {x, y} = req.body;
-        const result = await getHexDetails(x, y);
+        const {x, y, mapID} = req.body;
+        const result = await getHexDetails(x, y, mapID);
         res.status(200).json({
            message: 'Hex details retrieved',
            data: result
@@ -249,8 +249,8 @@ router.post('/get_hex_details', async (req, res) => {
 
 router.post('/update_hex_visibility', async (req, res) => {
    try{
-       const{x, y, isVisible} = req.body;
-       const result = await updateHexVisibility(x, y, isVisible);
+       const{x, y, mapID, isVisible} = req.body;
+       const result = await updateHexVisibility(x, y, mapID, isVisible);
        res.status(200).json({
           message: 'Hex visibility updated successfully',
           data: result
@@ -263,8 +263,8 @@ router.post('/update_hex_visibility', async (req, res) => {
 
 router.post('/update_hex_explored', async (req, res) => {
    try{
-       const{x, y, isExplored} = req.body;
-       const result = await updateHexExplored(x, y, isExplored);
+       const{x, y, mapID, isExplored} = req.body;
+       const result = await updateHexExplored(x, y, mapID, isExplored);
        res.status(200).json({
           message: 'Hex explored status updated successfully',
           data: result
@@ -277,8 +277,8 @@ router.post('/update_hex_explored', async (req, res) => {
 
 router.post('/update_hex_controlled', async(req, res)=> {
    try{
-       const{x, y, isControlled} = req.body;
-       const result = await updateHexControlled(x, y, isControlled);
+       const{x, y, mapID, isControlled} = req.body;
+       const result = await updateHexControlled(x, y, mapID, isControlled);
        res.status(200).json({
           message: 'Hex controlled status updated successfully',
           data: result

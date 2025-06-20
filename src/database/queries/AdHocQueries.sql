@@ -7,8 +7,8 @@ select *
 from person_map
 where map_id != '14'
 
-select *
-from person
+select distinct notes, map_id
+from hex
 
 insert into person_map (person_id, map_id) values ('3', '14')
 
