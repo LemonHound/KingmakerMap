@@ -4,9 +4,17 @@
 let apiUtils = {
     /**
      * Base URL for API endpoints
-     * Change this if your API is hosted elsewhere
      */
-    baseUrl: 'https://inisgorm.xyz',
+    get baseUrl() {
+        // Check if we're running on localhost
+        if (window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === '') {
+            return 'http://localhost:3000';
+        }
+        // Production URL
+        return 'https://inisgorm.xyz';
+    },
 
     /**
      * Make a request to the API

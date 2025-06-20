@@ -329,7 +329,7 @@ async function saveMap() {
     };
 
     try {
-        const mapID = localStorage.getItem('mapID');
+        let mapID = localStorage.getItem('mapID');
         let response;
         if (mapID) { // map exists, update it in storage
             response = await apiUtils.maps.update({
@@ -369,7 +369,7 @@ async function saveMap() {
             const isDM = localStorage.getItem('isDM');
             if(isDM){
                 response = await apiUtils.maps.create(mapData);
-                let mapID;
+                console.log('map id during save: ', response.data.map_id);
                 // Store the new map ID for future updates
                 if (response && response.data.map_id) {
                     mapID = response.data.map_id;
@@ -763,8 +763,8 @@ async function showHexDetails(x, y) {
         y: y,
         mapID: mapConfig.mapID
     });
-    const hexDetail = result.data.rows[0];
-
+    const hexDetail = result;
+    console.log('hex details: ', hexDetail);
     document.getElementById('hex-name').textContent = hexDetail.hex_name ? hexDetail.hex_name : "undefined";
 
     // build the hex details section
