@@ -2,6 +2,7 @@ select * from hex;
 select * from map;
 select * from person;
 select * from person_map;
+select * from map_links;
 
 select *
 from person_map

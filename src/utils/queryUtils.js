@@ -57,10 +57,19 @@ const createUser = async(username, password, is_dm, map_id) => {
     try{
         const db = getConnection();
         const createUserQuery = await getQuery('createPerson');
+        const createEmptyMapquery = await getQuery('createEmptyMap');
         const createMapLinkQuery = await getQuery('createUserMapLink');
         const userResults = await db.query(createUserQuery, [username, password, is_dm]);
         if(map_id !== null){
+            // non-DM with map_id attempting to register
             await db.query(createMapLinkQuery, [userResults.rows[0].person_id, map_id]);
+            userResults.rows[0].mapID = map_id;
+        } else {
+            // DM attempting to register
+            const newMapData = await db.query(createEmptyMapquery);
+            const newMapID = newMapData.rows[0].map_id;
+            await db.query(createMapLinkQuery, [userResults.rows[0].person_id, newMapID]);
+            userResults.rows[0].mapID = newMapID;
         }
         return userResults;
     } catch (error) {
@@ -168,6 +177,22 @@ const getMapLink = async(map_id) => {
             stack: e.stack
         });
         throw new Error(`Failed to retrieve map link: ${e.message}`);
+    }
+}
+
+const createMapLink = async(mapID) => {
+    try {
+        const db = getConnection();
+        const query = await getQuery('createMapLink');
+        return await db.query(query, [mapID]);
+    } catch(e){
+        console.error('Failed to generate map link:', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to generate map link: ${e.message}`);
     }
 }
 
@@ -386,6 +411,22 @@ const getPersonFromID = async(person_id) => {
     }
 }
 
+const getPersonDetails = async(username) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('getPerson');
+        return await db.query(query, [username]);
+    } catch(e){
+        console.error('Failed to get person details for username:', username, {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to get person details: ${e.message}`);
+    }
+}
+
 const updateHexName = async(x, y, mapID, newName) => {
     try{
         const db = getConnection();
@@ -500,5 +541,7 @@ module.exports = {
     updateHexVisibility,
     updateHexExplored,
     updateHexControlled,
-    getMapFromDMLink
+    getMapFromDMLink,
+    getPersonDetails,
+    createMapLink
 };

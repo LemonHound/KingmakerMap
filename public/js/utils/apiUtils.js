@@ -83,7 +83,12 @@ let apiUtils = {
 
         async getMapLink(data){
             return apiUtils.request('/api/map/get_map_link', 'POST', data);
+        },
+
+        async createMapLink(data){
+            return apiUtils.request('/api/map/create_map_link', 'POST', data);
         }
+
     },
 
     hexes: {
@@ -133,6 +138,10 @@ let apiUtils = {
 
         async getPersonFromID(data){
             return apiUtils.request('/api/person/get_person_from_id', 'POST', data);
+        },
+
+        async getPerson(data){
+            return apiUtils.request('/api/person/get_person_details', 'POST', data);
         }
     }
 };

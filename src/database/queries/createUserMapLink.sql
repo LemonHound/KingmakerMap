@@ -3,6 +3,6 @@ insert into kingmaker.person_map(
     map_id
 )
 values(
-    $1,
-    $2
+    $1::integer,
+    $2::integer
 )

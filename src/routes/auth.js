@@ -52,6 +52,7 @@ router.post('/register', async (req, res) => {
         // Insert the new user
         const result = await createUser(username, hashedPassword, isDM, mapID);
         const newUserID = result.rows[0].person_id;
+        mapID = result.rows[0].mapID;
 
         // Generate JWT token
         const token = jwt.sign(
@@ -71,6 +72,8 @@ router.post('/register', async (req, res) => {
                 id: newUserID,
                 username,
                 isDM: !!isDM,
+            },
+            map: {
                 mapID: mapID
             }
         });

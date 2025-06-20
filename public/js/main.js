@@ -41,9 +41,13 @@ async function showMapLink() {
     const mapID = localStorage.getItem('mapID');
     if(mapID){
         // mapID exists, therefore there should be a map link to display
-        const mapLink = await apiUtils.maps.getMapLink({mapID: mapID});
+        let mapLink = await apiUtils.maps.getMapLink({mapID: mapID});
         const mapLinkOverlayText = document.getElementById('mapLinkText');
         const mapLinkOverlay = document.getElementById('mapLinkOverlay');
+        if(!mapLink || mapLink.data.rows.length < 1){
+            mapLink = await apiUtils.maps.createMapLink({mapID: mapID});
+        }
+        console.log('maplink:', mapLink);
         mapLinkOverlayText.textContent = mapLink.data.rows[0].map_link_code;
 
         // set the "Copy Map Link" text to default
@@ -52,9 +56,7 @@ async function showMapLink() {
         copyButton.classList.remove('copied');
         mapLinkOverlay.classList.add('show');
     } else {
-        // no mapID exists, which means the map needs to be saved first.
-        // prompt the DM to save the map
-        alert('You must save the map to generate a map link.');
+        alert('please save your map before generating a code!');
     }
 }
 
@@ -108,13 +110,17 @@ async function showMap() {
     document.getElementById('map-container').classList.remove('hidden');
 
     // Update the user interface with user info
-    updateUserInterface();
+    await updateUserInterface();
 }
 
 // Update user interface based on logged in status
-function updateUserInterface() {
+async function updateUserInterface() {
     const username = localStorage.getItem('username');
     const isDM = localStorage.getItem('isDM') === 'true';
+
+    const personDetails = apiUtils.person.getPerson({username: username});
+    console.log('person details during user interface update: ', personDetails);
+    // const mapID =
 
     // Update username display
     const usernameDisplay = document.getElementById('username-display');

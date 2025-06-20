@@ -18,7 +18,9 @@ const {createMap,
     getHexDetails,
     updateHexVisibility,
     updateHexExplored,
-    updateHexControlled
+    updateHexControlled,
+    getPersonDetails,
+    createMapLink
 } = require('../utils/queryUtils');
 const {json} = require("express");
 
@@ -120,6 +122,20 @@ router.post('/get_map_link', async (req, res) => {
     }
 });
 
+router.post('/create_map_link', async(req, res) => {
+   try{
+       const {mapID} = req.body;
+       const result = await createMapLink(mapID);
+       res.status(200).json({
+           message: 'Map link generated successfully',
+           data: result
+       });
+   } catch(e){
+       console.error('Error generating map_link:', e);
+       res.status(500).json({error: 'Internal server error'});
+   }
+});
+
 router.post('/get_hexes_by_map_id', async (req, res) => {
     try{
         const {mapID} = req.body;
@@ -217,6 +233,20 @@ router.post('/get_person_from_id', async (req, res) => {
         console.error('Error getting person details:', e);
         res.status(500).json({error: 'Internal server error'});
     }
+});
+
+router.post('/get_person_details', async(req, res) => {
+    try{
+       const{username} = req.body;
+       const result = await getPersonDetails(username);
+       res.status(200).json({
+          message: 'person details retrieved successfully',
+          data: result
+       });
+   } catch(e){
+       console.error('Error getting person details:', e);
+       res.status(500).json({error: 'Internal server error'});
+   }
 });
 
 router.post('/update_hex_name', async (req, res) => {

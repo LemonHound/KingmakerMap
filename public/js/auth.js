@@ -198,7 +198,10 @@ async function handleRegistration(event) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('username', data.user.username);
         localStorage.setItem('isDM', data.user.isDM);
-        // localStorage.setItem('mapID', data.)
+        localStorage.setItem('mapID', data.map.mapID);
+        localStorage.setItem('bIsNewMap', 'true');
+
+        console.log('details: ', data);
 
         alert('Registration successful!');
 

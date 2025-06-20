@@ -92,14 +92,15 @@ async function initializeMap() {
 
     // Generate or load the map
     const mapID = localStorage.getItem('mapID');
-    console.log('map id: ', mapID);
+    const isNewMap = localStorage.getItem('bIsNewMap');
 
-    if(mapID != null){
+    if(mapID != null && isNewMap !== 'true'){
         mapConfig.mapID = mapID;
         const map = await apiUtils.maps.getMap({id: mapID});
         await loadMap(svgElement, map);
+        localStorage.removeItem('bIsNewMap');
     } else {
-        console.log("mapID is null, generating new map...", mapID)
+        mapConfig.mapID = mapID;
         await generateMap(svgElement);
     }
 
@@ -265,11 +266,9 @@ async function loadMap(svgElement, map) {
 
     // Apply map scale and translation
     hexGroup.setAttribute('transform', `scale(${mapConfig.hexScale})`);
-    console.log('map id during LoadMap: ', map.data.map_id);
     const hexData = await apiUtils.hexes.getHexesByMapID({mapID: map.data.map_id});
 
     // add each hex to the map
-    // this is wrong, just leaving for reference for now
     for (let row = 0; row < mapConfig.rows; row++) {
         for (let col = 0; col < mapConfig.cols; col++) {
             const tempHex = hexData.data.rows.find(hexRow =>
@@ -529,8 +528,11 @@ async function generateHex(hexGroup, row, col, hexData = null) {
     hexElement.style.fill = 'rgba(0,0,0,0)';
     hexElement.style.stroke = 'white';
     hexElement.style.strokeWidth = '1';
-    if(hexData){
-        hexElement.style.opacity = hexData.is_visible ? '.6' : '0';
+    if(hexData === null){
+        hexElement.style.opacity = '.6';
+    } else if (hexData && hexData.is_visible === false){
+        hexElement.style.opacity = '0';
+        hexElement.style.display = 'none';
     } else {
         hexElement.style.opacity = '.6';
     }
@@ -763,33 +765,33 @@ async function showHexDetails(x, y) {
         y: y,
         mapID: mapConfig.mapID
     });
-    const hexDetail = result;
-    console.log('hex details: ', hexDetail);
-    document.getElementById('hex-name').textContent = hexDetail.hex_name ? hexDetail.hex_name : "undefined";
+    let hexDetail = result.data.rows[0] || {};
+
+    document.getElementById('hex-name').textContent = hexDetail.hex_name ? hexDetail.hex_name : "unknown";
 
     // build the hex details section
     const hexInfoElement = document.getElementById('hex-info');
     hexInfoElement.innerHTML = `
-        <p><strong>Coordinates:</strong> ${hexDetail.x_coord}, ${hexDetail.y_coord}</p>
-        <p><strong>Status:</strong> ${hexDetail.is_controlled ? 'Controlled' : hexDetail.is_explored ? 'Explored' : 'Unexplored'}</p>
-        <p><strong>Resources:</strong> ${hexDetail.resources ? hexDetail.resources : ''}</p>
-        <div class=${isDM ? 'hex-actions-admin' : 'hidden'}>
-            <button id="change-visibility">${hexDetail.is_visible ? 'Hide This Hex' : 'Show This Hex'}</button>
-            <button id="restore-surrounding-hexes">Restore Surrounding Hexes</button>
-            <br/>
-            <button id="mark-explored">${hexDetail.is_explored ? 'Mark as Unexplored' : 'Mark as Explored'}</button>
-            <button id="mark-controlled">${hexDetail.is_controlled ? 'Mark Not Controlled' : 'Mark as Controlled'}</button>
-            <br/>
-            <button id="change-name">Change Name</button>
-        </div>
-        <div class="hex-actions">
-            <button id="add-note">Add Note</button>
-        </div>
-        <div class="hex-notes">
-            <h1>Notes:</h1>
-            ${notesHTML}
-        </div>
-    `;
+    <p><strong>Coordinates:</strong> ${hexDetail.x_coord}, ${hexDetail.y_coord}</p>
+    <p><strong>Status:</strong> ${hexDetail.is_controlled ? 'Controlled' : hexDetail.is_explored ? 'Explored' : 'Unexplored'}</p>
+    <p><strong>Resources:</strong> ${hexDetail.resources ? hexDetail.resources : ''}</p>
+    <div class=${isDM ? 'hex-actions-admin' : 'hidden'}>
+        <button id="change-visibility">${hexDetail.is_visible ? 'Hide This Hex' : 'Show This Hex'}</button>
+        <button id="restore-surrounding-hexes">Restore Surrounding Hexes</button>
+        <br/>
+        <button id="mark-explored">${hexDetail.is_explored ? 'Mark as Unexplored' : 'Mark as Explored'}</button>
+        <button id="mark-controlled">${hexDetail.is_controlled ? 'Mark Not Controlled' : 'Mark as Controlled'}</button>
+        <br/>
+        <button id="change-name">Change Name</button>
+    </div>
+    <div class="hex-actions">
+        <button id="add-note">Add Note</button>
+    </div>
+    <div class="hex-notes">
+        <h1>Notes:</h1>
+        ${notesHTML}
+    </div>
+`;
 
     // Add event listeners to buttons
     document.getElementById('mark-explored').addEventListener('click', async () => {
@@ -821,6 +823,7 @@ async function showHexDetails(x, y) {
 
     document.getElementById('change-name').addEventListener('click', async () => {
         let newName = prompt('New Name?');
+        console.log('hex name change triggered.  map id: ', mapConfig.mapID);
         await apiUtils.hexes.updateHexName({
             x: x,
             y: y,
@@ -905,10 +908,12 @@ async function invertVisibility(x, y){
     }
     const hex = hexMap[y][x];
     if(hex.isVisible !== false){
+        // should be visible
         hex.element.style.display = '';
         hex.element.style.opacity = '1';
         await showHexDetails(x, y);
     } else {
+        // should be invisible
         hex.element.style.display = 'none';
         closeHexDetails();
         selectedHex = null;
