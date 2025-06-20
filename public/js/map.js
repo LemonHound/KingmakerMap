@@ -400,6 +400,11 @@ async function saveMap() {
         const overlay = document.getElementById('savingOverlay');
         overlay.classList.remove('show');
         document.body.style.overflow = '';
+
+        // ensure the mapID is stored locally and in the map config, for later reference
+        mapConfig.mapID = mapID;
+        localStorage.setItem('mapID', mapID);
+
         return response;
     } catch (error) {
         console.error('Error saving map:', error);
