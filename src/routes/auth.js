@@ -3,7 +3,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { getConnection } = require('../database/db');
-const { getUsers, createUser, getMap, getUserMapLink} = require('../utils/queryUtils');
+const { getUsers, createUser, getMap, getUserMapLink, getMapFromDMLink} = require('../utils/queryUtils');
 // Replace ES imports with CommonJS requires
 const apiUtils = require('../../public/js/utils/apiUtils');
 
@@ -14,11 +14,21 @@ const JWT_SECRET = 'pathfinder-campaign-secret-key';
 
 // Register a new user
 router.post('/register', async (req, res) => {
-    const { username, password, isDM } = req.body;
+    const { username, password, isDM, dmMapLink } = req.body;
+    let mapID;
 
     // Basic validation
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    if(!isDM){
+        // map link is required
+        const mapData = await getMapFromDMLink(dmMapLink);
+        mapID = (mapData && mapData.rows[0]) ? mapData.rows[0].map_id : null;
+        if(!mapID){
+            return res.status(408).json({error: 'invalid map link provided'});
+        }
     }
 
     try {
@@ -36,7 +46,7 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         // Insert the new user
-        const result = await createUser(username, hashedPassword, isDM);
+        const result = await createUser(username, hashedPassword, isDM, mapID);
         const newUserID = result.rows[0].person_id;
 
         // Generate JWT token
@@ -56,7 +66,8 @@ router.post('/register', async (req, res) => {
             user: {
                 id: newUserID,
                 username,
-                isDM: !!isDM
+                isDM: !!isDM,
+                mapID: mapID
             }
         });
     } catch (error) {

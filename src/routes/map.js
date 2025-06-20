@@ -3,7 +3,23 @@ const {getPersonIDFromUsername} = require('../utils/queryUtils')
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const {createMap, updateMap, createHex, updateHex, getHexesByMapID, createUserMapLink, getMap, getHexNotes, addNoteToHex, getPersonFromID} = require('../utils/queryUtils');
+const {createMap,
+    updateMap,
+    createHex,
+    updateHex,
+    getHexesByMapID,
+    createUserMapLink,
+    getMap,
+    getHexNotes,
+    addNoteToHex,
+    getPersonFromID,
+    getMapLink,
+    updateHexName,
+    getHexDetails,
+    updateHexVisibility,
+    updateHexExplored,
+    updateHexControlled
+} = require('../utils/queryUtils');
 const {json} = require("express");
 
 const router = express.Router();
@@ -90,6 +106,20 @@ router.post('/get_map', async (req, res) => {
     }
 });
 
+router.post('/get_map_link', async (req, res) => {
+    try{
+        const {mapID} = req.body;
+        const result = await getMapLink(mapID);
+        res.status(200).json({
+           message: 'Map link retrieved successfully',
+           data: result
+        });
+    } catch(e){
+        console.error('Error getting map_link:', e);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 router.post('/get_hexes_by_map_id', async (req, res) => {
     try{
         const {mapID} = req.body;
@@ -113,10 +143,8 @@ router.post('/update_hex', async (req, res) => {
            name,
            isExplored,
            isControlled,
-           isVisible,
-           resources,
-           notes} = req.body;
-       const result = await updateHex(mapID, x, y, name, isExplored, isControlled, isVisible, resources, notes);
+           isVisible} = req.body;
+       const result = await updateHex(mapID, x, y, name, isExplored, isControlled, isVisible);
        res.status(200).json({
           message: 'Hex updated successfully',
           data: result
@@ -189,6 +217,76 @@ router.post('/get_person_from_id', async (req, res) => {
         console.error('Error getting person details:', e);
         res.status(500).json({error: 'Internal server error'});
     }
+});
+
+router.post('/update_hex_name', async (req, res) => {
+   try{
+       const{x, y, newName} = req.body;
+       const result = await updateHexName(x, y, newName);
+       res.status(200).json({
+          message: 'Hex name updated successfully',
+          data: result
+       });
+   } catch(e){
+       console.error('Error updating hex name:', e);
+       res.status(500).json({ error: 'Internal server error' });
+   }
+});
+
+router.post('/get_hex_details', async (req, res) => {
+    try{
+        const {x, y} = req.body;
+        const result = await getHexDetails(x, y);
+        res.status(200).json({
+           message: 'Hex details retrieved',
+           data: result
+        });
+    } catch(e){
+        console.error('Error fetching hex details:', e);
+        res.status(500).json({error: 'Internal server error'});
+    }
+});
+
+router.post('/update_hex_visibility', async (req, res) => {
+   try{
+       const{x, y, isVisible} = req.body;
+       const result = await updateHexVisibility(x, y, isVisible);
+       res.status(200).json({
+          message: 'Hex visibility updated successfully',
+          data: result
+       });
+   } catch(e){
+       console.error('Error updating hex visibility:', e);
+       res.status(500).json({ error: 'Internal server error' });
+   }
+});
+
+router.post('/update_hex_explored', async (req, res) => {
+   try{
+       const{x, y, isExplored} = req.body;
+       const result = await updateHexExplored(x, y, isExplored);
+       res.status(200).json({
+          message: 'Hex explored status updated successfully',
+          data: result
+       });
+   } catch(e){
+       console.error('Error updating hex exploration status');
+       res.status(500).json({error: 'Internal server error'});
+   }
+});
+
+router.post('/update_hex_controlled', async(req, res)=> {
+   try{
+       const{x, y, isControlled} = req.body;
+       const result = await updateHexControlled(x, y, isControlled);
+       res.status(200).json({
+          message: 'Hex controlled status updated successfully',
+          data: result
+       });
+   } catch(e){
+       console.error('Error updating hex controlled status');
+       res.status(500).json({error: 'Internal server error'});
+   }
 });
 
 

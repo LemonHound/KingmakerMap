@@ -16,6 +16,8 @@
             </div>
             <div class="header-center">
                 <button id="map-save">Save Map</button>
+                <button id="players-list-button">Show Linked Players</button>
+                <button id="show-map-link">Show Map Link Code</button>
             </div>
             <div class="header-right">
                 <div id="user-info" class="hidden">
@@ -49,13 +51,20 @@
 
     <main>
         <div id="game-container">
+            <div id="players-panel" class="hidden">
+                <div class="details-header">
+                    <h3>Connected Players</h3>
+                    <button id="close-players-panel" class="close-button">×</button>
+                </div>
+                <div id="players-list"></div>
+            </div>
             <div id="map-container" class="hidden">
                 <div id="hex-map"></div>
             </div>
             <div id="hex-details" class="hidden">
                 <div class="details-header">
-                    <h3>Hex Details</h3>
-                    <button id="close-hex-details" class="close-button">×</button>
+                    <h3 id="hex-name">Hex Details</h3>
+                    <button id="close-hex-details" class="close-button">x</button>
                 </div>
                 <div id="hex-info"></div>
             </div>
@@ -66,6 +75,19 @@
     <div class="overlay-content">
         <div class="overlay-text">Saving...</div>
         <div class="spinner"></div>
+    </div>
+</div>
+<div id="mapLinkOverlay" class="overlay">
+    <div class="map-link-overlay-content">
+        <div class="map-link-overlay-header">
+            <div>
+                <button id="map-link-copy">Copy Map Link</button>
+            </div>
+            <div>
+                <button id="map-link-overlay-exit"> X </button>
+            </div>
+        </div>
+        <div class="map-link-overlay-text" id="mapLinkText"></div>
     </div>
 </div>
 

@@ -97,6 +97,14 @@ function showRegistrationForm() {
                     <label>
                         <input type="checkbox" id="is-dm" name="isDM"> I am the Dungeon Master
                     </label>
+                    <div id="dm-info-bubble" style="display: none; margin-top: 8px; padding: 10px; background-color: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; font-size: 14px; color: #1976d2;">
+                        Registering as a new DM means you will generate a new map.<br/><br/>
+                        Your players can link to your map once you save the map and provide them with the generated code.                        
+                    </div>
+                </div>
+                <div class="form-group" id="dm-map-link-group">
+                    <label for="dm-map-link">Link to DM's Map:</label>
+                    <input type="text" id="dm-map-link" name="dmMapLink" placeholder="Enter the DM's map link">
                 </div>
                 <button type="submit">Register</button>
             </form>
@@ -109,6 +117,7 @@ function showRegistrationForm() {
 
         // Add event listeners
         document.getElementById('register').addEventListener('submit', handleRegistration);
+        document.getElementById('is-dm').addEventListener('change', toggleMapLinkField);
         document.getElementById('show-login').addEventListener('click', (e) => {
             e.preventDefault();
             loginForm.style.display = 'block';
@@ -123,6 +132,21 @@ function showRegistrationForm() {
     document.getElementById('register-form').style.display = 'block';
 }
 
+async function toggleMapLinkField(){
+    const dmMapLinkGroup = document.getElementById('dm-map-link-group');
+    const dmInfoBubble = document.getElementById('dm-info-bubble');
+
+    if (this.checked) {
+        // Hide the map link field and show the info bubble
+        dmMapLinkGroup.style.display = 'none';
+        dmInfoBubble.style.display = 'block';
+    } else {
+        // Show the map link field and hide the info bubble
+        dmMapLinkGroup.style.display = 'block';
+        dmInfoBubble.style.display = 'none';
+    }
+}
+
 // Handle registration form submission
 async function handleRegistration(event) {
     event.preventDefault();
@@ -131,6 +155,7 @@ async function handleRegistration(event) {
     const password = document.getElementById('reg-password').value;
     const confirmPassword = document.getElementById('reg-confirm-password').value;
     const isDM = document.getElementById('is-dm').checked;
+    const dmMapLink = document.getElementById('dm-map-link').value;
 
     // Basic validation
     if (!username || !password) {
@@ -143,13 +168,23 @@ async function handleRegistration(event) {
         return;
     }
 
+    if (!dmMapLink){
+        alert('DM map link is required');
+        return;
+    }
+
     try {
         const response = await fetch('/api/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ username, password, isDM })
+            body: JSON.stringify({
+                username,
+                password,
+                isDM,
+                dmMapLink
+            })
         });
 
         const data = await response.json();
@@ -163,6 +198,7 @@ async function handleRegistration(event) {
         localStorage.setItem('authToken', data.token);
         localStorage.setItem('username', data.user.username);
         localStorage.setItem('isDM', data.user.isDM);
+        // localStorage.setItem('mapID', data.)
 
         alert('Registration successful!');
 

@@ -34,6 +34,22 @@ let mapConfig = {
     cols: 29             // Number of columns in hex grid
 };
 
+// Hex Map Data:
+/*
+hexMap[row][col] = {
+    element,
+    mapID,
+    name,
+    x,
+    y,
+    isExplored,
+    isControlled,
+    resources,
+    notes,
+    isVisible
+}
+*/
+
 // Initialize the hex map when the page loads
 document.addEventListener('DOMContentLoaded', async function () {
     await initializeMap();
@@ -250,16 +266,46 @@ async function loadMap(svgElement, map) {
     // Apply map scale and translation
     hexGroup.setAttribute('transform', `scale(${mapConfig.hexScale})`);
     const hexData = await apiUtils.hexes.getHexesByMapID({mapID: map.data.map_id});
-    console.log('hex data: ', hexData.data);
 
     // add each hex to the map
     // this is wrong, just leaving for reference for now
     for (let row = 0; row < mapConfig.rows; row++) {
         for (let col = 0; col < mapConfig.cols; col++) {
-            await generateHex(hexGroup, row, col);
+            const tempHex = hexData.data.rows.find(hexRow =>
+                hexRow.y_coord === row && hexRow.x_coord === col
+            );
+            await generateHex(hexGroup, row, col, tempHex ? tempHex : null);
         }
     }
     updateHexes(hexData.data);
+}
+
+async function saveHex() {
+    try{
+        if(!selectedHex) return;
+        selectedHex.name = selectedHex.name || 'zz00';
+
+        const response = await apiUtils.hexes.updateHex({
+            mapID: selectedHex.mapID,
+            x: selectedHex.x,
+            y: selectedHex.y,
+            name: selectedHex.name,
+            isExplored: selectedHex.isExplored,
+            isControlled: selectedHex.isExplored,
+            isVisible: selectedHex.isVisible
+        });
+
+        if(response && response.data && response.data.rows.length > 0 && response.data.rows[0].hex_id) {
+            console.log('saved hex successfully');
+            // successfully saved hex, therefore change the button in the UI
+            const saveHexButton = document.getElementById('save-hex-details');
+            saveHexButton.textContent = 'Saved!';
+            saveHexButton.classList.add('saved');
+        }
+    } catch(e){
+        console.error('Error saving hex:', e);
+        throw e;
+    }
 }
 
 async function saveMap() {
@@ -297,8 +343,8 @@ async function saveMap() {
                 mapID: mapID
             });
 
-            if (existingHexData.data.rows.length > 0){
-                // hex data exists, therefore need to update it
+            if (!(existingHexData.data.rows.length > 0)){
+                // no hex data exists - shouldn't ever happen
                 for(let i = 0; i < mapConfig.rows; i++){
                     for(let j = 0; j < mapConfig.cols; j++){
                         let tempHex = hexMap[i][j];
@@ -309,13 +355,25 @@ async function saveMap() {
                             name: tempHex.name,
                             isExplored: tempHex.isExplored,
                             isControlled: tempHex.isControlled,
-                            isVisible: tempHex.isVisible,
-                            resources: tempHex.resources
+                            isVisible: tempHex.isVisible
                         });
                     }
                 }
-            } else {
-                // scenarios where map exists but hexes do not
+            }
+        } else {
+            // map doesn't exist, create it
+            // only for DM since regular players shouldn't save a completely new map
+            const isDM = localStorage.getItem('isDM');
+            if(isDM){
+                response = await apiUtils.maps.create(mapData);
+                let mapID;
+                // Store the new map ID for future updates
+                if (response && response.id) {
+                    mapID = response.id;
+                    localStorage.setItem('mapID', response.id);
+                }
+
+                // create the hexes as well, since they must not exist
                 for(let i = 0; i < mapConfig.rows; i++){
                     for(let j = 0; j < mapConfig.cols; j++){
                         let tempHex = hexMap[i][j];
@@ -328,39 +386,13 @@ async function saveMap() {
                             isExplored: tempHex.isExplored,
                             isControlled: tempHex.isControlled,
                             isVisible: tempHex.isVisible,
-                            resources: tempHex.resources
+                            resources: tempHex.resources,
+                            notes: tempHex.notes
                         });
                     }
                 }
             }
-        } else { // map doesn't exist, create it
-            response = await apiUtils.maps.create(mapData);
-            let mapID;
-            // Store the new map ID for future updates
-            if (response && response.id) {
-                mapID = response.id;
-                localStorage.setItem('mapID', response.id);
-            }
-
-            for(let i = 0; i < mapConfig.rows; i++){
-                for(let j = 0; j < mapConfig.cols; j++){
-                    let tempHex = hexMap[i][j];
-                    console.log('hex data being saved: ' + JSON.stringify(tempHex));
-                    await apiUtils.hexes.createHex({
-                        mapID: mapID,
-                        x: tempHex.x,
-                        y: tempHex.y,
-                        name: tempHex.name,
-                        isExplored: tempHex.isExplored,
-                        isControlled: tempHex.isControlled,
-                        isVisible: tempHex.isVisible,
-                        resources: tempHex.resources,
-                        notes: tempHex.notes
-                    });
-                }
-            }
         }
-
         // remove the saving overlay
         const overlay = document.getElementById('savingOverlay');
         overlay.classList.remove('show');
@@ -467,7 +499,7 @@ async function setupDragControls(svgElement) {
 }
 
 // Create a single hex
-async function generateHex(hexGroup, row, col) {
+async function generateHex(hexGroup, row, col, hexData = null) {
     // Calculate center position for the hex
     const width = HEX_SIZE;
     const height = HEX_SIZE;
@@ -491,7 +523,7 @@ async function generateHex(hexGroup, row, col) {
     hexElement.style.fill = 'rgba(0,0,0,0)';
     hexElement.style.stroke = 'white';
     hexElement.style.strokeWidth = '1';
-    hexElement.style.opacity = '.6';
+    hexElement.style.opacity = hexData.is_visible ? '.6' : '0';
 
     // Add click event for hex selection
     hexElement.addEventListener('click', async (e) => {
@@ -505,11 +537,11 @@ async function generateHex(hexGroup, row, col) {
     hexGroup.appendChild(hexElement);
 
     // Store hex in our data structure
-    if (!hexMap[row]) hexMap[row] = [];
+if (!hexMap[row]) hexMap[row] = [];
     hexMap[row][col] = {
         element: hexElement,
         mapID: mapConfig.mapID,
-        name: '', //TODO: Allow name to be changed later!
+        name: '',
         x: col,
         y: row,
         isExplored: false,
@@ -521,7 +553,6 @@ async function generateHex(hexGroup, row, col) {
 }
 
 function updateHexes(hexData){
-
     for(let hex of hexData.rows){
         hexMap[hex.y_coord][hex.x_coord].isVisible = hex.is_visible;
         hexMap[hex.y_coord][hex.x_coord].isExplored = hex.is_explored;
@@ -644,12 +675,12 @@ async function showHexDetails(x, y) {
 
     if(isDragging){return;}
 
-    // Set as selected hex
-    selectedHex = { x, y };
-
     // Get hex data
     const hex = hexMap[y] && hexMap[y][x] ? hexMap[y][x] : null;
     if (!hex) return;
+
+    // Set as selected hex
+    selectedHex = hex;
 
     // Update visual selection
     clearHexSelection();
@@ -713,22 +744,32 @@ async function showHexDetails(x, y) {
     }
     notesHTML += `</div>`;
 
+    // gather the rest of the hex info
+    const result = await apiUtils.hexes.getHexDetails({
+        x: x,
+        y: y
+    });
+    const hexDetail = result.data.rows[0];
+
+    document.getElementById('hex-name').textContent = hexDetail.hex_name ? hexDetail.hex_name : "ZZ00";
+
     // build the hex details section
     const hexInfoElement = document.getElementById('hex-info');
     hexInfoElement.innerHTML = `
-        <p><strong>Coordinates:</strong> X:${x}, Y:${y}</p>
-        <p><strong>Status:</strong> ${hex.isControlled ? 'Controlled' : hex.isExplored ? 'Explored' : 'Unexplored'}</p>
-        <p><strong>Resources:</strong> ${hex.resources ? hex.resources : ''}</p>
-        <div class=${isDM ? 'hex-actions' : 'hidden'}>
-            <button id="change-visibility">${hex.isVisible ? 'Hide This Hex' : 'Show This Hex'}</button>
+        <p><strong>Coordinates:</strong> ${hexDetail.x_coord}, ${hexDetail.y_coord}</p>
+        <p><strong>Status:</strong> ${hexDetail.is_controlled ? 'Controlled' : hexDetail.is_explored ? 'Explored' : 'Unexplored'}</p>
+        <p><strong>Resources:</strong> ${hexDetail.resources ? hexDetail.resources : ''}</p>
+        <div class=${isDM ? 'hex-actions-admin' : 'hidden'}>
+            <button id="change-visibility">${hexDetail.is_visible ? 'Hide This Hex' : 'Show This Hex'}</button>
             <button id="restore-surrounding-hexes">Restore Surrounding Hexes</button>
             <br/>
-            <button id="mark-explored">${hex.isExplored ? 'Mark as Unexplored' : 'Mark as Explored'}</button>
-            <button id="mark-controlled">${hex.isControlled ? 'Mark Not Controlled' : 'Mark as Controlled'}</button>
+            <button id="mark-explored">${hexDetail.is_explored ? 'Mark as Unexplored' : 'Mark as Explored'}</button>
+            <button id="mark-controlled">${hexDetail.is_controlled ? 'Mark Not Controlled' : 'Mark as Controlled'}</button>
+            <br/>
+            <button id="change-name">Change Name</button>
         </div>
         <div class="hex-actions">
             <button id="add-note">Add Note</button>
-            <button id="test-query">Test Query</button>
         </div>
         <div class="hex-notes">
             <h1>Notes:</h1>
@@ -737,17 +778,12 @@ async function showHexDetails(x, y) {
     `;
 
     // Add event listeners to buttons
-    document.getElementById('test-query').addEventListener('click', async () => {
-        try {
-            const result = await apiUtils.test.test("potato");
-            alert(`Query result: ${result.data}`);
-        } catch (error) {
-            alert('Test failed: ' + error.message);
-        }
-    });
-
     document.getElementById('mark-explored').addEventListener('click', async () => {
         await markHexAsExplored(x, y, !hex.isExplored);
+    });
+
+    document.getElementById('mark-controlled').addEventListener('click', async () => {
+        await markHexAsControlled(x, y, !hex.isControlled);
     });
 
     document.getElementById('add-note').addEventListener('click', async () => {
@@ -765,8 +801,18 @@ async function showHexDetails(x, y) {
         await invertVisibility(x, y);
     });
 
-    document.getElementById('restore-surrounding-hexes').addEventListener('click', () => {
-        restoreSurroundingHexes(x, y);
+    document.getElementById('restore-surrounding-hexes').addEventListener('click', async () => {
+        await restoreSurroundingHexes(x, y);
+    });
+
+    document.getElementById('change-name').addEventListener('click', async () => {
+        let newName = prompt('New Name?');
+        await apiUtils.hexes.updateHexName({
+           x: x,
+           y: y,
+           newName: newName
+        });
+        document.getElementById('hex-name').textContent = newName;
     });
 }
 
@@ -774,6 +820,7 @@ function closeHexDetails() {
     const hexDetailsElement = document.getElementById('hex-details');
     hexDetailsElement.classList.remove('visible');
     hexDetailsElement.classList.add('hidden');
+    selectedHex = null;
 
     // Restore map container to full width
     document.getElementById('map-container').classList.remove('with-details');
@@ -799,18 +846,33 @@ function clearHexSelection() {
 
 // Mark a hex as explored or unexplored
 async function markHexAsExplored(x, y, explored = true) {
-    console.log(`Marking hex ${x},${y} as ${explored ? 'explored' : 'unexplored'}`);
 
     // Update our data structure
     if (hexMap[y] && hexMap[y][x]) {
         hexMap[y][x].isExplored = explored;
 
-        // Visual indication
-        if (explored) {
-            hexMap[y][x].element.style.opacity = '1.0'; // do something to visually indicate it was explored
-        } else {
-            hexMap[y][x].element.style.opacity = '0.7'; // do something to visually indicate it is unexplored
+        await apiUtils.hexes.updateHexExplored({
+           x: x,
+           y: y,
+           isExplored: explored
+        });
+
+        // Update hex details display if this is the currently selected hex
+        if (selectedHex && selectedHex.x === x && selectedHex.y === y) {
+            await showHexDetails(x, y);
         }
+    }
+}
+
+async function markHexAsControlled(x, y, isControlled){
+    if (hexMap[y] && hexMap[y][x]) {
+        hexMap[y][x].isControlled = isControlled;
+
+        await apiUtils.hexes.updateHexExplored({
+            x: x,
+            y: y,
+            isControlled: isControlled
+        });
 
         // Update hex details display if this is the currently selected hex
         if (selectedHex && selectedHex.x === x && selectedHex.y === y) {
@@ -831,30 +893,41 @@ async function invertVisibility(x, y){
     } else {
         hex.element.style.display = 'none';
         closeHexDetails();
+        selectedHex = null;
     }
+    await apiUtils.hexes.updateHexVisibility({
+        x: x,
+        y: y,
+        isVisible: hexMap[y][x].isVisible
+    });
 }
 
-function restoreSurroundingHexes(x, y){
+async function restoreSurroundingHexes(x, y){
 
     let skew = y % 2 === 1 ? -1 : 0;
 
     // hexes above
-    setVisible(x + skew, y - 1);
-    setVisible(x + skew + 1, y - 1);
+    await setVisible(x + skew, y - 1);
+    await setVisible(x + skew + 1, y - 1);
 
     // hexes left and right
-    setVisible(x - 1, y);
-    setVisible(x + 1, y);
+    await setVisible(x - 1, y);
+    await setVisible(x + 1, y);
 
     // hexes below
-    setVisible(x + skew, y + 1);
-    setVisible(x + skew + 1, y + 1);
+    await setVisible(x + skew, y + 1);
+    await setVisible(x + skew + 1, y + 1);
 
-    function setVisible(x, y){
-        if(hexMap[y] && hexMap[y][x]) {
+    async function setVisible(x, y) {
+        if (hexMap[y] && hexMap[y][x]) {
             hexMap[y][x].isVisible = true;
             hexMap[y][x].element.style.display = '';
             hexMap[y][x].element.style.opacity = '1';
+            await apiUtils.hexes.updateHexVisibility({
+                x: x,
+                y: y,
+                isVisible: true
+            });
         }
     }
 }

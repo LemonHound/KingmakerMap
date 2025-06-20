@@ -71,6 +71,10 @@ let apiUtils = {
          */
         async getMap(id) {
             return apiUtils.request('/api/map/get_map', 'POST', id);
+        },
+
+        async getMapLink(data){
+            return apiUtils.request('/api/map/get_map_link', 'POST', data);
         }
     },
 
@@ -92,8 +96,28 @@ let apiUtils = {
             return apiUtils.request('/api/hexes/get_hex_notes', 'POST', data);
         },
 
+        async getHexDetails(data) {
+            return apiUtils.request('/api/hexes/get_hex_details', 'POST', data);
+        },
+
         async addNoteToHex(data){
             return apiUtils.request('/api/hexes/add_note_to_hex', 'POST', data);
+        },
+
+        async updateHexName(data){
+            return apiUtils.request('/api/hexes/update_hex_name', 'POST', data);
+        },
+
+        async updateHexVisibility(data){
+            return apiUtils.request('/api/hexes/update_hex_visibility', 'POST', data);
+        },
+
+        async updateHexExplored(data){
+            return apiUtils.request('/api/hexes/update_hex_explored', 'POST', data);
+        },
+
+        async updateHexControlled(data){
+            return apiUtils.request('/api/hexes/update_hex_controlled', 'POST', data);
         }
     },
 

@@ -6,6 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up event listeners
     document.getElementById('logout-btn').addEventListener('click', logout);
     document.getElementById('map-save').addEventListener('click', saveMap);
+    document.getElementById('show-map-link').addEventListener('click', showMapLink);
+    document.getElementById('map-link-copy').addEventListener('click', copyMapLink);
+    document.getElementById('map-link-overlay-exit').addEventListener('click', closeMapLinkOverlay);
+    document.getElementById('players-list-button').addEventListener('click', togglePlayersPanel);
+    document.getElementById('close-players-panel')?.addEventListener('click', () => {
+        document.getElementById('players-panel').classList.add('hidden');
+    });
 
     // Check if user is already logged in (via stored token)
     const token = localStorage.getItem('authToken');
@@ -31,6 +38,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+async function showMapLink() {
+    const mapID = localStorage.getItem('mapID');
+    if(mapID){
+        // mapID exists, therefore there should be a map link to display
+        const mapLink = await apiUtils.maps.getMapLink({mapID: mapID});
+        const mapLinkOverlayText = document.getElementById('mapLinkText');
+        const mapLinkOverlay = document.getElementById('mapLinkOverlay');
+        mapLinkOverlayText.textContent = mapLink.data.rows[0].map_link_code;
+
+        // set the "Copy Map Link" text to default
+        const copyButton = document.getElementById('map-link-copy');
+        copyButton.textContent = 'Copy Map Link';
+        copyButton.classList.remove('copied');
+        mapLinkOverlay.classList.add('show');
+    } else {
+        // no mapID exists, which means the map needs to be saved first.
+        // prompt the DM to save the map
+        prompt('You must save the map to generate a map link.');
+    }
+}
+
+async function copyMapLink() {
+    const mapID = localStorage.getItem('mapID');
+    if(mapID){
+        const mapLink = await apiUtils.maps.getMapLink({mapID: mapID});
+        await navigator.clipboard.writeText(mapLink.data.rows[0].map_link_code);
+        const copyButton = document.getElementById('map-link-copy');
+        copyButton.textContent = 'Copied!';
+        copyButton.classList.add('copied');
+    }
+}
+
+async function closeMapLinkOverlay(){
+    const mapLinkOverlay = document.getElementById('mapLinkOverlay');
+    mapLinkOverlay.classList.remove('show');
+}
+
+function togglePlayersPanel() {
+    const panel = document.getElementById('players-panel');
+    panel.classList.toggle('hidden');
+}
+
+function updatePlayersList(players) {
+    const playersListElement = document.getElementById('players-list');
+
+    if (!players || players.length === 0) {
+        playersListElement.innerHTML = '<p>No other players connected</p>';
+        return;
+    }
+
+    const playersHTML = players.map(player => `
+        <div class="player-item ${player.isOnline ? '' : 'offline'}">
+            <div class="player-name">${player.name || 'Unknown Player'}</div>
+            <div class="player-status">
+                ${player.isOnline ? '🟢 Online' : '🔴 Offline'}
+            </div>
+        </div>
+    `).join('');
+
+    playersListElement.innerHTML = playersHTML;
+}
+
 // Helper function to show the map interface
 async function showMap() {
     console.log('Showing map interface');
@@ -41,16 +110,6 @@ async function showMap() {
 
     // Update the user interface with user info
     updateUserInterface();
-
-/*    try{
-        if(typeof initializeMap === 'function'){
-            await initializeMap();
-        } else {
-            console.error('initializeMap function not yet available')
-        }
-    } catch (e){
-        console.error('Error initializing map: ', e);
-    }*/
 }
 
 // Update user interface based on logged in status

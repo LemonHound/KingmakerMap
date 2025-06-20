@@ -50,13 +50,17 @@ const getPersonIDFromUsername = async(username) => {
  * @param username
  * @param password
  * @param is_dm
+ * @param map_id
  * @return {Promise<*>}
  */
-const createUser = async(username, password, is_dm) => {
+const createUser = async(username, password, is_dm, map_id) => {
     try{
         const db = getConnection();
-        const query = await getQuery('createPerson');
-        return await db.query(query, [username, password, is_dm]);
+        const createUserQuery = await getQuery('createPerson');
+        const createMapLinkQuery = await getQuery('createUserMapLink');
+        const userResults = await db.query(createUserQuery, [username, password, is_dm]);
+        await db.query(createMapLinkQuery, [userResults.rows[0].person_id, map_id]);
+        return userResults;
     } catch (error) {
         console.error('Failed to create user:', {
             error: error.message,
@@ -133,7 +137,6 @@ const updateMap = async(id, name, offset_x, offset_y, hex_scale, image_scale, im
  * @return {Promise<*>}
  */
 const getMap = async(map_id) => {
-    console.log("queryUtils/getMap()");
     try {
         const db = getConnection();
         const query = await getQuery('getMap');
@@ -146,6 +149,23 @@ const getMap = async(map_id) => {
             stack: e.stack
         });
         throw new Error(`Failed to load map: ${e.message}`);
+    }
+}
+
+const getMapLink = async(map_id) => {
+    try{
+        console.log('map id: ', map_id);
+        const db = getConnection();
+        const query = await getQuery('getMapLink');
+        return await db.query(query, [map_id])
+    } catch(e){
+        console.error('Failed to retrieve map link:', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to retrieve map link: ${e.message}`);
     }
 }
 
@@ -245,8 +265,7 @@ const updateHex = async(map_id,
                         hex_name,
                         is_explored,
                         is_controlled,
-                        is_visible,
-                        resources) => {
+                        is_visible) => {
     try{
         const db = getConnection();
         const query = await getQuery('updateHex');
@@ -257,8 +276,7 @@ const updateHex = async(map_id,
             hex_name,
             is_explored,
             is_controlled,
-            is_visible,
-            resources])
+            is_visible])
     } catch (e) {
         console.error('Failed to create hex:', {
             error: e.message,
@@ -366,6 +384,97 @@ const getPersonFromID = async(person_id) => {
     }
 }
 
+const updateHexName = async(x, y, newName) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('updateHexName');
+        return await db.query(query, [x, y, newName]);
+    } catch(e){
+        console.error('Failed to update hex name: (', x,', ', y, '), ', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+        throw new Error(`Failed to get person details: ${e.message}`);
+    }
+}
+
+const getHexDetails = async(x, y) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('getHexDetails');
+        return await db.query(query, [x, y]);
+    } catch(e){
+        console.error('Failed to get hex details: (', x, ', ', y, '), ', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+    }
+}
+
+const updateHexVisibility = async(x, y, isVisible) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('updateHexVisibility');
+        return await db.query(query, [x, y, isVisible]);
+    } catch(e){
+        console.error('Failed to update visibility for (', x, ', ', y, '), ', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+    }
+}
+
+const updateHexExplored = async(x, y, isExplored) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('updateHexExplored');
+        return await db.query(query, [x, y, isExplored]);
+    } catch(e){
+        console.error('Failed to update explored status', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+    }
+}
+
+const updateHexControlled = async(x, y, isControlled) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('updateHexControlled');
+        return await db.query(query, [x, y, isControlled]);
+    } catch(e){
+        console.error('Failed to update controlled status', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+    }
+}
+
+const getMapFromDMLink = async(dmLink) => {
+    try{
+        const db = getConnection();
+        const query = await getQuery('getMapIDFromDMLink');
+        return await db.query(query, [dmLink]);
+    } catch(e){
+        console.error('Invalid DM Link', {
+            error: e.message,
+            code: e.code,
+            detail: e.detail,
+            stack: e.stack
+        });
+    }
+}
+
 module.exports = {
     getUsers,
     createUser,
@@ -382,5 +491,12 @@ module.exports = {
     getPersonIDFromUsername,
     updateMap,
     addNoteToHex,
-    getPersonFromID
+    getPersonFromID,
+    getMapLink,
+    updateHexName,
+    getHexDetails,
+    updateHexVisibility,
+    updateHexExplored,
+    updateHexControlled,
+    getMapFromDMLink
 };
