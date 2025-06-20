@@ -1,5 +1,4 @@
 
-
 // Main application entry point
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Pathfinder Kingmaker Campaign app initialized');
