@@ -6,7 +6,7 @@ let apiUtils = {
      * Base URL for API endpoints
      * Change this if your API is hosted elsewhere
      */
-    baseUrl: 'http://localhost:3000',
+    baseUrl: window.location.origin,
 
     /**
      * Make a request to the API
