@@ -1,8 +1,8 @@
 const {getPersonIDFromUsername} = require('../utils/queryUtils')
 
 const express = require('express');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+// const bcrypt = require('bcrypt');
+// const jwt = require('jsonwebtoken');
 const {createMap,
     updateMap,
     createHex,
@@ -22,12 +22,12 @@ const {createMap,
     getPersonDetails,
     createMapLink
 } = require('../utils/queryUtils');
-const {json} = require("express");
+// const {json} = require("express");
 
 const router = express.Router();
 
 // JWT secret key (in production, this will be in an environment variable)
-const JWT_SECRET = 'pathfinder-campaign-secret-key';
+// const JWT_SECRET = 'pathfinder-campaign-secret-key';
 
 router.post('/create_map', async (req, res) => {
 
@@ -300,7 +300,7 @@ router.post('/update_hex_explored', async (req, res) => {
           data: result
        });
    } catch(e){
-       console.error('Error updating hex exploration status');
+       console.error('Error updating hex exploration status', e);
        res.status(500).json({error: 'Internal server error'});
    }
 });
@@ -314,7 +314,7 @@ router.post('/update_hex_controlled', async(req, res)=> {
           data: result
        });
    } catch(e){
-       console.error('Error updating hex controlled status');
+       console.error('Error updating hex controlled status', e);
        res.status(500).json({error: 'Internal server error'});
    }
 });
