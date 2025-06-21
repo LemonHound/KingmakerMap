@@ -2,7 +2,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { getConnection } = require('../database/db');
+// const { getConnection } = require('../database/db');
 const { getUsers, createUser, getUserMapLink, getMapFromDMLink} = require('../utils/queryUtils');
 
 // const apiUtils = require('../../public/js/utils/apiUtils');
