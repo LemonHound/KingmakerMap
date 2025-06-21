@@ -2,10 +2,10 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { getConnection } = require('../database/db');
-const { getUsers, createUser, getMap, getUserMapLink, getMapFromDMLink} = require('../utils/queryUtils');
-// Replace ES imports with CommonJS requires
-const apiUtils = require('../../public/js/utils/apiUtils');
+// const { getConnection } = require('../database/db');
+const { getUsers, createUser, getUserMapLink, getMapFromDMLink} = require('../utils/queryUtils');
+
+// const apiUtils = require('../../public/js/utils/apiUtils');
 
 const router = express.Router();
 
@@ -36,7 +36,7 @@ router.post('/register', async (req, res) => {
     }
 
     try {
-        const db = getConnection();
+        // const db = getConnection();
 
         // Check if user already exists
         const existingUser = await getUsers(username);
@@ -98,7 +98,7 @@ router.post('/login', async (req, res) => {
     }
 
     try {
-        const db = getConnection();
+        // const db = getConnection();
 
         // Find user by username
         const result = await getUsers(username);

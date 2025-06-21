@@ -1,0 +1,24 @@
+name: CI
+on:
+  pull_request:
+    branches: [master, develop]
+  push:
+    branches: [master, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.12.2'
+      - name: Install dependencies
+        run: npm install
+      - name: Check syntax
+        run: npm run check-syntax
+      - name: Run linting
+        run: npm run lint
+      - name: Run tests
+        run: npm test
