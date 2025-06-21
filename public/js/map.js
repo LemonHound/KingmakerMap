@@ -791,7 +791,7 @@ async function showHexDetails(x, y) {
         <h1>Notes:</h1>
         ${notesHTML}
     </div>
-`;
+    `;
 
     // Add event listeners to buttons
     document.getElementById('mark-explored').addEventListener('click', async () => {
