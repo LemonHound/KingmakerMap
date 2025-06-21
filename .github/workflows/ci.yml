@@ -16,7 +16,9 @@ jobs:
           node-version: '20.12.2'
       - name: Install dependencies
         run: npm install
-      - name: Run tests
-        run: npm test
+      - name: Check syntax
+        run: npm run check-syntax
       - name: Run linting
         run: npm run lint
+      - name: Run tests
+        run: npm test
